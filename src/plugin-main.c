@@ -37,7 +37,6 @@ static void callback_ready(enum obs_frontend_event event, void *private_data)
 			stir_filter->virtual_source = obs_source_create(STIR_OUT_ID, STIR_OUT, NULL, NULL);
 		}
 		obs_source_set_audio_mixers(stir_filter->virtual_source, 0x5);
-		o
 	}
 }
 
