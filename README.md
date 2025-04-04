@@ -14,4 +14,13 @@ STIR started off as a server-hosted audio upmixer that applied simple audio filt
 ### supported environments
 *versions n' stuff*
 
-versions are built on top of **OBS 30** or later; compatibility chart here soon
+| OBS version | support |
+|-------------|---------|
+| 30.0.0 | supported |
+| 31.0.0 | supported |
+
+|   OS   | support |
+|--------|---------|
+| windows x64 | supported |
+| macOS | unsupported |
+| linux | unsupported |
