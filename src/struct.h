@@ -17,6 +17,8 @@ struct stir_filter_data
 	obs_source_t *virtual_source;
 	float *upmix_buffer[MAX_AUDIO_CHANNELS];
 	obs_source_t *context;
+	obs_source_t *parent;
+	const char *parent_name;
 	size_t channels;
 	float sample_rate;
 

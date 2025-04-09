@@ -10,7 +10,6 @@
 #include "struct.h"	
 
 #define PLUGIN_NAME "STIR"
-#define STIR_OUT "stir_output"
 #define STIR_OUT_ID "stir_filter_output"
 
 static const char *stir_filter_get_name(void *data)
@@ -22,22 +21,31 @@ static const char *stir_filter_get_name(void *data)
 static const char *virtual_source_get_name(void *data)
 {
 	UNUSED_PARAMETER(data);
-	return obs_module_text(STIR_OUT);
+	return obs_module_text("STIR_VIRTUAL_OUT");
 }
 
 static void callback_ready(enum obs_frontend_event event, void *private_data)
 {
 	struct stir_filter_data *stir_filter = private_data;
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
-		obs_source_t *src = obs_get_source_by_name(STIR_OUT);
+		const char *s_pre = "stir_output_";
+		const char *s_suf = stir_filter->parent_name;
+		char *src_name = concat(s_pre, s_suf);
+		obs_source_t *src = obs_get_source_by_name(src_name);
 		if (src != NULL) {
-			obs_log(LOG_INFO, "STIR source found, using existing source");
 			stir_filter->virtual_source = src;
 		} else {
-			stir_filter->virtual_source = obs_source_create(STIR_OUT_ID, STIR_OUT, NULL, NULL);
+			stir_filter->virtual_source = obs_source_create(STIR_OUT_ID, src_name, NULL, NULL);
 		}
-		obs_source_set_audio_mixers(stir_filter->virtual_source, 0x5);
+		bfree(src_name);
+		obs_source_set_audio_mixers(stir_filter->virtual_source, 0x1);
 	}
+}
+
+static void stir_filter_add(void *data, obs_source_t *source) {
+	struct stir_filter_data *stir_filter = data;
+	stir_filter->parent = source;
+	stir_filter->parent_name = obs_source_get_name(source);
 }
 
 static void stir_filter_destroy(void *data)
@@ -73,12 +81,12 @@ static void stir_filter_update(void *data, obs_data_t *settings)
 static void *stir_filter_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct stir_filter_data *stir_filter = bzalloc(sizeof(struct stir_filter_data));
-	obs_frontend_add_event_callback(callback_ready, stir_filter);
 	stir_filter->channels = audio_output_get_channels(obs_get_audio());
 	stir_filter->context = source;
 	for (size_t ch = 0; ch < stir_filter->channels; ch++) {
 		stir_filter->upmix_buffer[ch] = bzalloc(sizeof(float) * AUDIO_OUTPUT_FRAMES);
 	}
+	obs_frontend_add_event_callback(callback_ready, stir_filter);
 	stir_filter_update(stir_filter, settings);
 	return stir_filter;
 }
@@ -184,13 +192,15 @@ static struct obs_source_info stir_filter = {
 	.update = stir_filter_update,
 	.filter_audio = stir_filter_process,
 	.get_properties = stir_filter_properties,
+	.filter_add = stir_filter_add,
 };
 
 struct obs_source_info virtual_audio_info = {
 	.id = STIR_OUT_ID,
 	.type = OBS_SOURCE_TYPE_INPUT,
 	.output_flags = OBS_SOURCE_AUDIO,
-	.get_name = virtual_source_get_name
+	.get_name = virtual_source_get_name,
+	.icon_type = OBS_ICON_TYPE_AUDIO_OUTPUT,
 };
 
 bool obs_module_load(void)
