@@ -16,6 +16,9 @@
 !LICENSE
 !README.md
 
+# And meta files
+!/meta
+
 # Exclude lock files
 *.lock.json
 
