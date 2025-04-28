@@ -5,34 +5,69 @@
 
 #include "struct.h"
 
-// TODO: fix this horrible implementation and use for lowpass
-
-void butterworth_init(struct stir_filter_data *filter) 
+void butterworth_calculate_lowpass(struct stir_filter_data *filter, struct filter_channel_state *c)
 {
 	float omega_c = 2.0f * M_PI * (filter->lp_cutoff / filter->sample_rate);
-	float cos_omega = cosf(omega_c);
-	float sin_omega = sinf(omega_c);
-	float alpha = sin_omega / sqrtf(2.0f);
+	float alpha = sinf(omega_c) / (2 * sqrtf(2.0f));
 
-	float a0 = 1.0f + alpha;
+	float cos_omega_c = cosf(omega_c);
 
-	filter->b0 = (1.0f - cos_omega) / (2.0f * a0);
-	filter->b1 = (1.0f - cos_omega) / a0;
-	filter->b2 = filter->b0;
+	c->lp_b0 = (1.0f - cos_omega_c) / 2.0f;
+	c->lp_b1 = 1.0f - cos_omega_c;
+	c->lp_b2 = (1.0f - cos_omega_c) / 2.0f;
 
-	filter->a1 = -2.0f * cos_omega / a0;
-	filter->a2 = (1.0f - alpha) / a0;
+	c->a0 = 1 + alpha;
+	c->a1 = -2.0f * cos_omega_c;
+	c->a2 = 1.0f - alpha;
+
+	c->lp_b0 /= c->a0;
+	c->lp_b1 /= c->a0;
+	c->lp_b2 /= c->a0;
+
+	c->a1 /= c->a0;
+	c->a2 /= c->a0;
 }
 
-float butterworth_process(struct stir_filter_data *filter, struct filter_channel_state *c, float in)
+void butterworth_calculate_highpass(struct stir_filter_data *filter, struct filter_channel_state *c)
 {
-	float lowpass = filter->b0 * in + filter->b1 * c->z1 + filter->b2 * c->z2 - filter->a1 * c->z1 -
-			filter->a2 * c->z2;
+	float omega_c = 2.0f * M_PI * (filter->hp_cutoff / filter->sample_rate);
+	float alpha = sinf(omega_c) / (2 * sqrtf(2.0f));
 
-	c->z2 = c->z1;
-	c->z1 = in;
+	float cos_omega_c = cosf(omega_c);
 
-	return lowpass;
+	c->hp_b0 = (1.0f + cos_omega_c) / 2.0f;
+	c->hp_b1 = -(1.0f + cos_omega_c);
+	c->hp_b2 = (1.0f + cos_omega_c) / 2.0f;
+
+	c->a0 = 1 + alpha;
+	c->a1 = -2.0f * cos_omega_c;
+	c->a2 = 1.0f - alpha;
+
+	c->hp_b0 /= c->a0;
+	c->hp_b1 /= c->a0;
+	c->hp_b2 /= c->a0;
+
+	c->a1 /= c->a0;
+	c->a2 /= c->a0;
+}
+
+
+float butterworth_filter(int type, struct stir_filter_data *filter, struct filter_channel_state *c, float in)
+{
+	float out = 0.0f;
+
+	if (type == 0) {
+		out = (c->lp_b0 * in + c->lp_b1 * c->x1 + c->lp_b2 * c->x2 - c->a1 * c->y1 - c->a2 * c->y2) * filter->lp_intensity;
+	} else if (type == 1) {
+		out = (c->hp_b0 * in + c->hp_b1 * c->x1 + c->hp_b2 * c->x2 - c->a1 * c->y1 - c->a2 * c->y2) * filter->hp_intensity;
+	}
+
+	c->x2 = c->x1;
+	c->x1 = in;
+	c->y2 = c->y1;
+	c->y1 = out;
+
+	return out;
 }
 
 float simple_lowpass(struct stir_filter_data *filter, struct filter_channel_state *c, float in, float cutoff, float intensity)
