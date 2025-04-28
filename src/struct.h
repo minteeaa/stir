@@ -26,6 +26,7 @@ struct stir_filter_data
 	float sample_rate;
 
 	char *lp_filter_type;
+	char *hp_filter_type;
 	float lp_cutoff;
 	float lp_intensity;
 

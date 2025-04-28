@@ -71,6 +71,7 @@ static void stir_filter_update(void *data, obs_data_t *settings)
 	stir_filter->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 
 	stir_filter->lp_filter_type = (char *)obs_data_get_string(settings, "lp_filter_type");
+	stir_filter->hp_filter_type = (char *)obs_data_get_string(settings, "hp_filter_type");
 
 	stir_filter->lp_intensity = (float)obs_data_get_double(settings, "lp_alpha");
 	stir_filter->hp_intensity = (float)obs_data_get_double(settings, "hp_alpha");
@@ -128,8 +129,11 @@ struct obs_audio_data *stir_filter_process(void *data, struct obs_audio_data *au
 		} else if (strcmp(stir_filter->lp_filter_type, "lp_filter_type_simple") == 0) {
 			stir_filter->upmix_buffer[4][i] = simple_lowpass(stir_filter, lowpass_state, left, stir_filter->lp_cutoff, stir_filter->lp_intensity);
 		}
-		stir_filter->upmix_buffer[5][i] = butterworth_filter(1, stir_filter, highpass_state, left);
-		//stir_filter->upmix_buffer[5][i] = simple_highpass(stir_filter, highpass_state, left, stir_filter->hp_cutoff, stir_filter->hp_intensity);
+		if (strcmp(stir_filter->hp_filter_type, "hp_filter_type_butterworth") == 0) {
+			stir_filter->upmix_buffer[5][i] = butterworth_filter(1, stir_filter, highpass_state, left);
+		} else if (strcmp(stir_filter->hp_filter_type, "hp_filter_type_simple") == 0) {
+			stir_filter->upmix_buffer[5][i] = simple_highpass(stir_filter, highpass_state, left, stir_filter->hp_cutoff, stir_filter->hp_intensity);
+		}
 	}
 
 	struct obs_source_audio audio_o = {
@@ -168,6 +172,9 @@ static obs_properties_t *stir_filter_properties(void *data)
 	obs_properties_add_float_slider(g_lows, "lp_cutoff_freq", "Cutoff Frequency", 10.0, 350.0, 1.0);
 	obs_properties_add_float_slider(g_lows, "lp_alpha", "Intensity", 0.01, 1.0, 0.01);
 
+	obs_property_t *hp_filter_type = obs_properties_add_list(g_highs, "hp_filter_type", "Filter Type", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+	obs_property_list_add_string(hp_filter_type, "Simple", "hp_filter_type_simple");
+	obs_property_list_add_string(hp_filter_type, "Butterworth", "hp_filter_type_butterworth");
 	obs_properties_add_float_slider(g_highs, "hp_cutoff_freq", "Cutoff Frequency", 1000.0, 2500.0, 1.0);
 	obs_properties_add_float_slider(g_highs, "hp_alpha", "Intensity", 0.01, 1.0, 0.01);
 
@@ -190,6 +197,7 @@ void stir_filter_defaults(obs_data_t* settings) {
 	obs_data_set_default_double(settings, "lp_alpha", 1.0);
 
 	obs_data_set_default_string(settings, "lp_filter_type", "lp_filter_type_butterworth");
+	obs_data_set_default_string(settings, "hp_filter_type", "hp_filter_type_butterworth");
 
 	obs_data_set_default_double(settings, "hp_cutoff_freq", 2000.0);
 	obs_data_set_default_double(settings, "hp_alpha", 1.0);
