@@ -73,6 +73,10 @@ static void stir_filter_update(void *data, obs_data_t *settings)
 	stir_filter->lp_filter_type = (char *)obs_data_get_string(settings, "lp_filter_type");
 	stir_filter->hp_filter_type = (char *)obs_data_get_string(settings, "hp_filter_type");
 
+	stir_filter->tremolo_enabled = (bool *)obs_data_get_bool(settings, "lp_tremolo");
+	lowpass_state->tremolo_rate = (float)obs_data_get_double(settings, "lp_tremolo_rate");
+	lowpass_state->tremolo_depth = (float)obs_data_get_double(settings, "lp_tremolo_depth");
+
 	stir_filter->lp_intensity = (float)obs_data_get_double(settings, "lp_alpha");
 	stir_filter->hp_intensity = (float)obs_data_get_double(settings, "hp_alpha");
 	stir_filter->bp_intensity = (float)obs_data_get_double(settings, "bp_alpha");
@@ -115,6 +119,7 @@ struct obs_audio_data *stir_filter_process(void *data, struct obs_audio_data *au
 	for (size_t i = 0; i < sample_ct; i++) {
 		float left = samples0[i];
 		float right = samples1[i];
+		float low_buf = 0.0f;
 
 		stir_filter->upmix_buffer[0][i] = left;
 		stir_filter->upmix_buffer[1][i] = right;
@@ -124,11 +129,19 @@ struct obs_audio_data *stir_filter_process(void *data, struct obs_audio_data *au
 						       stir_filter->bp_intensity),
 			stir_filter->bp_cutoff_lower, stir_filter->bp_intensity);
 		stir_filter->upmix_buffer[3][i] = 0.0f;
+
 		if (strcmp(stir_filter->lp_filter_type, "lp_filter_type_butterworth") == 0) {
-			stir_filter->upmix_buffer[4][i] = butterworth_filter(0, stir_filter, lowpass_state, left);
+			low_buf = butterworth_filter(0, stir_filter, lowpass_state, left);
 		} else if (strcmp(stir_filter->lp_filter_type, "lp_filter_type_simple") == 0) {
-			stir_filter->upmix_buffer[4][i] = simple_lowpass(stir_filter, lowpass_state, left, stir_filter->lp_cutoff, stir_filter->lp_intensity);
+			low_buf = simple_lowpass(stir_filter, lowpass_state, left, stir_filter->lp_cutoff, stir_filter->lp_intensity);
 		}
+
+		if (stir_filter->tremolo_enabled) {
+			stir_filter->upmix_buffer[4][i] = tremolo_filter(stir_filter, lowpass_state, low_buf);
+		} else {
+			stir_filter->upmix_buffer[4][i] = low_buf;
+		}
+
 		if (strcmp(stir_filter->hp_filter_type, "hp_filter_type_butterworth") == 0) {
 			stir_filter->upmix_buffer[5][i] = butterworth_filter(1, stir_filter, highpass_state, left);
 		} else if (strcmp(stir_filter->hp_filter_type, "hp_filter_type_simple") == 0) {
@@ -159,7 +172,9 @@ static obs_properties_t *stir_filter_properties(void *data)
 	obs_properties_t *g_lows = obs_properties_create();
 	obs_properties_t *g_highs = obs_properties_create();
 	obs_properties_t *g_mids = obs_properties_create();
-	// obs_properties_t *g_chconfig = obs_properties_create();
+	// obs_properties_t *g_chconfig = obs_properties_create()
+	
+	obs_properties_t *g_lows_tremolo = obs_properties_create();;
 
 	obs_properties_add_group(props, "g_lows", "Lows", OBS_GROUP_CHECKABLE, g_lows);
 	obs_properties_add_group(props, "g_highs", "Highs", OBS_GROUP_CHECKABLE, g_highs);
@@ -167,10 +182,16 @@ static obs_properties_t *stir_filter_properties(void *data)
 	// obs_properties_add_group(props, "g_chconfig", "Channel Configuration", OBS_GROUP_NORMAL, g_chconfig);
 
 	obs_property_t *lp_filter_type = obs_properties_add_list(g_lows, "lp_filter_type", "Filter Type", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+
 	obs_property_list_add_string(lp_filter_type, "Simple", "lp_filter_type_simple");
 	obs_property_list_add_string(lp_filter_type, "Butterworth", "lp_filter_type_butterworth");
+
 	obs_properties_add_float_slider(g_lows, "lp_cutoff_freq", "Cutoff Frequency", 10.0, 350.0, 1.0);
 	obs_properties_add_float_slider(g_lows, "lp_alpha", "Intensity", 0.01, 1.0, 0.01);
+
+	obs_properties_add_group(g_lows, "lp_tremolo", "Tremolo", OBS_GROUP_CHECKABLE, g_lows_tremolo);
+	obs_properties_add_float_slider(g_lows_tremolo, "lp_tremolo_rate", "Rate", 0.0, 20.0, 0.1);
+	obs_properties_add_float_slider(g_lows_tremolo, "lp_tremolo_depth", "Depth", 0.0, 1.0, 0.01);
 
 	obs_property_t *hp_filter_type = obs_properties_add_list(g_highs, "hp_filter_type", "Filter Type", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 	obs_property_list_add_string(hp_filter_type, "Simple", "hp_filter_type_simple");
@@ -198,6 +219,9 @@ void stir_filter_defaults(obs_data_t* settings) {
 
 	obs_data_set_default_string(settings, "lp_filter_type", "lp_filter_type_butterworth");
 	obs_data_set_default_string(settings, "hp_filter_type", "hp_filter_type_butterworth");
+
+	obs_data_set_default_double(settings, "lp_tremolo_rate", 4.0);
+	obs_data_set_default_double(settings, "lp_tremolo_depth", 0.5);
 
 	obs_data_set_default_double(settings, "hp_cutoff_freq", 2000.0);
 	obs_data_set_default_double(settings, "hp_alpha", 1.0);

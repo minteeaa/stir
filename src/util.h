@@ -70,6 +70,17 @@ float butterworth_filter(int type, struct stir_filter_data *filter, struct filte
 	return out;
 }
 
+float tremolo_filter(struct stir_filter_data *filter, struct filter_channel_state *c, float in) {
+	float out = 0.0f;
+	float tremolo_lfo = 1.0f + c->tremolo_depth * sinf(2.0f * M_PI * c->tremolo_phase);
+	out = in * tremolo_lfo;
+
+	c->tremolo_phase += c->tremolo_rate / filter->sample_rate;
+	if (c->tremolo_phase >= 1.0f)
+		c->tremolo_phase -= 1.0f;
+	return out;
+}
+
 float simple_lowpass(struct stir_filter_data *filter, struct filter_channel_state *c, float in, float cutoff, float intensity)
 {
 	float rc = 1.0f / (cutoff * 2 * M_PI);

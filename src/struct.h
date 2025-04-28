@@ -13,6 +13,10 @@ struct filter_channel_state
 	float hp_b0, hp_b1, hp_b2;
 	float a0, a1, a2;
 	float x1, x2, y1, y2;
+
+	float tremolo_rate;
+	float tremolo_depth;
+	float tremolo_phase;
 };
 
 struct stir_filter_data
@@ -24,6 +28,8 @@ struct stir_filter_data
 	const char *parent_name;
 	size_t channels;
 	float sample_rate;
+
+	bool *tremolo_enabled;
 
 	char *lp_filter_type;
 	char *hp_filter_type;
