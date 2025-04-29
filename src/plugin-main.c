@@ -9,6 +9,8 @@
 #define PLUGIN_NAME "STIR"
 #define STIR_OUT_ID "stir_filter_output"
 
+int front_loaded = 0;
+
 static const char *stir_filter_get_name(void *data)
 {
 	UNUSED_PARAMETER(data);
@@ -21,21 +23,27 @@ static const char *virtual_source_get_name(void *data)
 	return obs_module_text("STIR_VIRTUAL_OUT");
 }
 
+static void register_new_stir_source(void *private_data) {
+	struct stir_filter_data *stir_filter = private_data;
+	const char *s_pre = "stir_output_";
+	const char *s_suf = stir_filter->parent_name;
+	char *src_name = concat(s_pre, s_suf);
+	obs_source_t *src = obs_get_source_by_name(src_name);
+	if (src != NULL) {
+		stir_filter->virtual_source = src;
+	} else {
+		stir_filter->virtual_source = obs_source_create(STIR_OUT_ID, src_name, NULL, NULL);
+	}
+	bfree(src_name);
+	obs_source_set_audio_mixers(stir_filter->virtual_source, 0x1);
+}
+
 static void callback_ready(enum obs_frontend_event event, void *private_data)
 {
 	struct stir_filter_data *stir_filter = private_data;
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
-		const char *s_pre = "stir_output_";
-		const char *s_suf = stir_filter->parent_name;
-		char *src_name = concat(s_pre, s_suf);
-		obs_source_t *src = obs_get_source_by_name(src_name);
-		if (src != NULL) {
-			stir_filter->virtual_source = src;
-		} else {
-			stir_filter->virtual_source = obs_source_create(STIR_OUT_ID, src_name, NULL, NULL);
-		}
-		bfree(src_name);
-		obs_source_set_audio_mixers(stir_filter->virtual_source, 0x1);
+		front_loaded = 1;
+		register_new_stir_source(stir_filter);
 	}
 }
 
@@ -43,6 +51,12 @@ static void stir_filter_add(void *data, obs_source_t *source) {
 	struct stir_filter_data *stir_filter = data;
 	stir_filter->parent = source;
 	stir_filter->parent_name = obs_source_get_name(source);
+
+	if (front_loaded == 1) {
+		register_new_stir_source(stir_filter);
+	} else {
+		obs_frontend_add_event_callback(callback_ready, stir_filter);
+	}
 }
 
 static void stir_filter_destroy(void *data)
