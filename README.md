@@ -16,6 +16,7 @@ STIR started off as a server-hosted audio upmixer that applied simple audio filt
 
 ### usage
 *the info, the guide*
+
 refer to the [wiki](https://github.com/minteeaa/stir/wiki) for setup and usage
 
 ### supported environments
