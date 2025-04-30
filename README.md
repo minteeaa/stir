@@ -10,9 +10,13 @@
 ### what is this
 *audio filter/upmixer designed around vrchat usage*
 
-vrchat has had a [lack of audio filter](https://feedback.vrchat.com/sdk-bug-reports/p/proposal-for-fixing-audio-filters-eg-low-pass-support-for-avpro) support for a few years, making systems like [ARC-DSP](https://www.patreon.com/Elevative) very appealing for better sounding audio used in music events
+vrchat has had a [lack of audio filter support](https://feedback.vrchat.com/sdk-bug-reports/p/proposal-for-fixing-audio-filters-eg-low-pass-support-for-avpro) for a few years, making systems like [ARC-DSP](https://www.patreon.com/Elevative) very appealing for better sounding audio used in music events
 
 STIR started off as a server-hosted audio upmixer that applied simple audio filters separating the lows, mids, and highs of a stereo input and returned those in a channel setup usable within vrchat; it is now an OBS plugin
+
+### usage
+*the info, the guide*
+refer to the [wiki](https://github.com/minteeaa/stir/wiki) for setup and usage
 
 ### supported environments
 *versions n' stuff*
