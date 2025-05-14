@@ -188,7 +188,7 @@ static obs_properties_t *stir_filter_properties(void *data)
 	obs_properties_t *g_mids = obs_properties_create();
 	// obs_properties_t *g_chconfig = obs_properties_create()
 	
-	obs_properties_t *g_lows_tremolo = obs_properties_create();;
+	obs_properties_t *g_lows_tremolo = obs_properties_create();
 
 	obs_properties_add_group(props, "g_lows", "Lows", OBS_GROUP_CHECKABLE, g_lows);
 	obs_properties_add_group(props, "g_highs", "Highs", OBS_GROUP_CHECKABLE, g_highs);
@@ -216,6 +216,7 @@ static obs_properties_t *stir_filter_properties(void *data)
 	obs_properties_add_float_slider(g_mids, "bp_cutoff_freq_upper", "Upper Cutoff Frequency", 500.0, 1500.0, 1.0);
 	obs_properties_add_float_slider(g_mids, "bp_cutoff_freq_lower", "Lower Cutoff Frequency", 100.0, 500.0, 1.0);
 	obs_properties_add_float_slider(g_mids, "bp_alpha", "Intensity", 0.01, 1.0, 0.01);
+
 	/*
 	obs_properties_add_list(g_chconfig, "ch_ch0", "Channel 1", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 	obs_properties_add_list(g_chconfig, "ch_ch1", "Channel 2", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
