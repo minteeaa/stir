@@ -1,0 +1,25 @@
+name: STIR World Removal
+description: Request removal of a world from the wiki list
+title: "[rm-world] "
+labels: ["world list"]
+body:
+  - type: input
+    id: world
+    attributes:
+      label: World name from wiki
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason
+      description: "Reason can be miniscule or lengthy, as long as it's reasonable"
+    validations:
+      required: true
+  - type: checkboxes
+    id: add-checks
+    attributes:
+      label: Additional checks
+      description: Requirements to be met before submission
+      options:
+        - label: Are you (one of the) creator(s) and/or maintainer(s) of the world?
