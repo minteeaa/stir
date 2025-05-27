@@ -2,7 +2,7 @@
 name: STIR World Submission
 about: Submit a STIR-integrated world for the wiki list
 title: "[world]"
-labels: documentation
+labels: world list
 assignees: ''
 
 ---
