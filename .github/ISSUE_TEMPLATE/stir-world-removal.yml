@@ -20,6 +20,6 @@ body:
     id: add-checks
     attributes:
       label: Additional checks
-      description: Requirements to be met before submission
+      description: Not required, but information that helps
       options:
         - label: Are you (one of the) creator(s) and/or maintainer(s) of the world?
