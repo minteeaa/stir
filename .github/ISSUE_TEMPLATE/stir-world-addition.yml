@@ -13,7 +13,7 @@ body:
     id: add-checks
     attributes:
       label: Additional checks
-      description: Requirements to be met before submittion
+      description: Requirements to be met before submission
       options:
         - label: Is the world public?
           required: true
