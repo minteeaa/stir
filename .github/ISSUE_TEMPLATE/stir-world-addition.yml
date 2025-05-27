@@ -23,3 +23,10 @@ body:
           required: true
         - label: Do you certify you are the (one of the) creator(s) and/or maintainer(s) of the world?
           required: true
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional notes
+      description: "Anything else to add?"
+    validations:
+      required: false
