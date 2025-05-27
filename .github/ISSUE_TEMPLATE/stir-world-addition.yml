@@ -1,6 +1,6 @@
 name: STIR World Addition
 description: Submit a STIR-integrated world for the wiki list
-title: "[world] "
+title: "[add-world] "
 labels: ["world list"]
 body:
   - type: input
