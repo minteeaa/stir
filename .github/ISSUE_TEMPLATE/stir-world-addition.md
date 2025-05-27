@@ -1,0 +1,25 @@
+name: STIR World Addition
+about: Submit a STIR-integrated world for the wiki list
+title: "[world] "
+labels: ["world list"]
+body:
+  - type: input
+    id: world
+    attributes:
+      label: World ID or direct link
+    validations:
+      required: true
+  - type: checkboxes
+    id: add-checks
+    attributes:
+      label: Additional checks
+      description: Requirements to be met before submittion
+      options:
+        - label: Is the world public?
+          required: true
+        - label: Does the world have a public-accessible video player?
+          required: true
+        - label: Does the video player have a STIR mode?
+          required: true
+        - label: Do you certify you are the (one of the) creator(s) and/or maintainer(s) of the world?
+          required: true
