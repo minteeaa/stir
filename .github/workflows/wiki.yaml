@@ -33,4 +33,4 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: Andrew-Chen-Wang/github-wiki-action@v4
+      - uses: Andrew-Chen-Wang/github-wiki-action@b7e552d7cb0fa7f83e459012ffc6840fd87bcb83
