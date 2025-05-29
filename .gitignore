@@ -19,6 +19,9 @@
 # And meta files
 !/meta
 
+# Wiki files too
+!/wiki
+
 # Exclude lock files
 *.lock.json
 
