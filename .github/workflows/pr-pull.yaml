@@ -1,5 +1,5 @@
 name: Pull Request
-run-name: ${{ github.event.pull_request.title }} pull request run 🚀
+run-name: ${{ github.event.pull_request.title }} pull request run
 on:
   workflow_dispatch:
   pull_request:
@@ -14,13 +14,13 @@ concurrency:
   cancel-in-progress: true
 jobs:
   check-format:
-    name: Check Formatting 🔍
+    name: Formatting Check
     uses: ./.github/workflows/check-format.yaml
     permissions:
       contents: read
 
   build-project:
-    name: Build Project 🧱
+    name: Build
     uses: ./.github/workflows/build-project.yaml
     secrets: inherit
     permissions:

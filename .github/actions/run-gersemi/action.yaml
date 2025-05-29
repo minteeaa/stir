@@ -12,33 +12,33 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Check Runner Operating System 🏃‍♂️
+    - name: Check Runner Operating System 
       if: runner.os == 'Windows'
       shell: bash
       run: |
-        : Check Runner Operating System 🏃‍♂️
+        : Check Runner Operating System 
         echo "::notice::run-gersemi action requires a macOS-based or Linux-based runner."
         exit 2
 
-    - name: Check for Changed Files ✅
+    - name: Check for Changed Files 
       uses: ./.github/actions/check-changes
       id: checks
       with:
         checkGlob: "'*.cmake' '*CMakeLists.txt'"
         diffFilter: 'ACM'
 
-    - name: Install Dependencies 🛍️
+    - name: Install Dependencies 
       if: runner.os == 'Linux' && fromJSON(steps.checks.outputs.hasChangedFiles)
       shell: bash
       run: |
-        : Install Dependencies 🛍️
+        : Install Dependencies 
         echo ::group::Install Dependencies
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
         brew install --quiet zsh
         echo ::endgroup::
 
-    - name: Run gersemi 🎛️
+    - name: Run gersemi 
       if: fromJSON(steps.checks.outputs.hasChangedFiles)
       id: result
       shell: zsh --no-rcs --errexit --pipefail {0}
@@ -46,7 +46,7 @@ runs:
       env:
         CHANGED_FILES: ${{ steps.checks.outputs.changedFiles }}
       run: |
-        : Run gersemi 🎛️
+        : Run gersemi 
         if (( ${+RUNNER_DEBUG} )) setopt XTRACE
 
         print ::group::Install gersemi

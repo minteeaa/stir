@@ -1,0 +1,29 @@
+name: Publish wiki
+on:
+  push:
+    branches: [main]
+    paths:
+      - wiki/**
+      - .github/workflows/wiki.yml
+concurrency:
+  group: wiki
+  cancel-in-progress: true
+jobs:
+  check-links:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: lycheeverse/lychee-action@v2.0.2
+        with:
+          args: --offline --include-fragments 'wiki/*.md'
+  publish-wiki:
+    needs:
+      - check-links
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Andrew-Chen-Wang/github-wiki-action@v4
