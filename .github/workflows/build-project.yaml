@@ -7,7 +7,7 @@ on:
         value: ${{ jobs.check-event.outputs.pluginName }}
 jobs:
   check-event:
-    name: Check GitHub Event Data 🔎
+    name: Check GitHub Event Data
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -23,12 +23,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Check Event Data ☑️
+      - name: Check Event Data
         id: setup
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          : Check Event Data ☑️
+          : Check Event Data
           if [[ "${RUNNER_DEBUG}" ]]; then set -x; fi
 
           case "${GITHUB_EVENT_NAME}" in
