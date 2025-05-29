@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - build
+          - wiki
 permissions:
   contents: write
 jobs:

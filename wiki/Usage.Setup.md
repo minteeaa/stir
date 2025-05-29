@@ -8,10 +8,10 @@
 > [!NOTE]
 > it is recommended to create a new OBS profile for STIR - these settings will not be handled correctly on a non-STIR video player
 
-- the `channels` under the `Audio` tab of your settings should be set to `5.1` - STIR will not enable itself otherwise
+- the `channels` under the `Audio` tab of your settings should be set to `5.1`
 - select any stereo audio source in your scene and add STIR as a `filter`
 > currently, only `stereo` (2-channel) sources are supported; this may change in the future
 - add a new `source` to your scene - STIR will have registered a new source type called `STIR_VIRTUAL_OUT`
 - given the option, **add an existing source** and select the option that matches the name of the source STIR is applied to
 
-any modifications to the filter UI will update immediately to the source
+any modifications to the filter UI will update immediately to the source - you'll notice it has 6 channels instead of 2
