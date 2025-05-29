@@ -10,6 +10,8 @@ VRChat released their `Steam Audio Beta` branch of the game as they integrate th
 
 from limited testing, we've found `Directivity` and `Attenuation` to function as expected
 
+![steam-audio.component1](./img/extra.steam-audio.component1.png)
+
 a red ellipsoid gizmo should appear on the affected `Audio Source` when `Directivity` is enabled
 
 for further configuration info on these parameters, [refer to the official documentation for the component](https://valvesoftware.github.io/steam-audio/doc/unity/source.html)
