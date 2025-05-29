@@ -1,4 +1,4 @@
-name: Check Code Formatting 🛠️
+name: Check Code Formatting
 on:
   workflow_call:
 jobs:
