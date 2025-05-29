@@ -5,9 +5,16 @@ on:
     paths:
       - wiki/**
       - .github/workflows/wiki.yml
+  workflow_call:
+    outputs:
+      pluginName:
+        description: Project name detected by parsing build spec file
+        value: ${{ jobs.check-event.outputs.pluginName }}
+
 concurrency:
   group: wiki
   cancel-in-progress: true
+
 jobs:
   check-links:
     runs-on: ubuntu-24.04
