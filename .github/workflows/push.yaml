@@ -11,6 +11,7 @@ on:
       - cmake/**
       - data/**
       - src/**
+      - .github/workflows/push.yaml
     tags:
       - '*'
 permissions:
