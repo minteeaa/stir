@@ -34,6 +34,9 @@ if(ENABLE_QT)
   )
 endif()
 
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.c)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/init.c)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
+
+get_target_property(target_type ${CMAKE_PROJECT_NAME} TYPE)
+message(STATUS "Target type: ${target_type}")
