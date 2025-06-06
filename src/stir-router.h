@@ -26,3 +26,4 @@ static obs_properties_t *stir_router_properties(void *data);
 void stir_router_defaults(obs_data_t *settings);
 
 static struct obs_source_info stir_router;
+struct obs_source_info virtual_audio_info;
