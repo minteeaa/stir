@@ -1,5 +1,7 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
+#include <obs-audio-controls.h>
+#include <plugin-support.h>
 
 #include "stir-router.h"
 
@@ -9,9 +11,11 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
 bool obs_module_load(void)
 {
-	obs_log(LOG_INFO, "STIR loading modules...");
-	obs_register_source(&stir_router);
+	obs_log(LOG_INFO, "STIR loading modules");
+	obs_register_source(&stir_router_info);
+	obs_log(LOG_INFO, "Router: registered filter");
 	obs_register_source(&virtual_audio_info);
+	obs_log(LOG_INFO, "Router: registered virtual out");
 	obs_log(LOG_INFO, "STIR loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }

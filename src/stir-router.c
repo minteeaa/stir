@@ -1,5 +1,7 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
+#include "util.h"
+#include "stir-router.h"
 
 int front_loaded = 0;
 
@@ -13,19 +15,21 @@ struct stir_router_data {
 	float sample_rate;
 };
 
-static const char *stir_router_get_name(void *data)
+struct stir_router_data *stir_router_store;
+
+const char *stir_router_get_name(void *data)
 {
 	UNUSED_PARAMETER(data);
 	return obs_module_text("STIR Router");
 }
 
-static const char *virtual_source_get_name(void *data)
+const char *virtual_source_get_name(void *data)
 {
 	UNUSED_PARAMETER(data);
 	return obs_module_text("STIR Virtual Out");
 }
 
-static void register_new_stir_source(void *private_data)
+void register_new_stir_source(void *private_data)
 {
 	struct stir_router_data *stir_router = private_data;
 	const char *s_pre = "stir_output_";
@@ -35,13 +39,13 @@ static void register_new_stir_source(void *private_data)
 	if (src != NULL) {
 		stir_router->virtual_source = src;
 	} else {
-		stir_router->virtual_source = obs_source_create(STIR_OUT_ID, src_name, NULL, NULL);
+		stir_router->virtual_source = obs_source_create("stir_virtual_out", src_name, NULL, NULL);
 	}
 	bfree(src_name);
 	obs_source_set_audio_mixers(stir_router->virtual_source, 0x1);
 }
 
-static void callback_ready(enum obs_frontend_event event, void *private_data)
+void callback_ready(enum obs_frontend_event event, void *private_data)
 {
 	struct stir_router_data *stir_router = private_data;
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
@@ -50,9 +54,15 @@ static void callback_ready(enum obs_frontend_event event, void *private_data)
 	}
 }
 
-static void *stir_router_create(obs_data_t *settings, obs_source_t *source)
+void stir_router_update(void *data, obs_data_t *settings)
+{
+	struct stir_router_data *stir_router = data;
+}
+
+void *stir_router_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct stir_router_data *stir_router = bzalloc(sizeof(struct stir_router_data));
+	stir_router_store = stir_router;
 	stir_router->channels = audio_output_get_channels(obs_get_audio());
 	stir_router->context = source;
 	for (size_t ch = 0; ch < stir_router->channels; ch++) {
@@ -64,7 +74,7 @@ static void *stir_router_create(obs_data_t *settings, obs_source_t *source)
 	return stir_router;
 }
 
-static void stir_router_destroy(void *data)
+void stir_router_destroy(void *data)
 {
 	struct stir_router_data *stir_router = data;
 	if (stir_router->virtual_source) {
@@ -77,7 +87,7 @@ static void stir_router_destroy(void *data)
 	bfree(stir_router);
 }
 
-static void stir_router_add(void *data, obs_source_t *source)
+void stir_router_add(void *data, obs_source_t *source)
 {
 	struct stir_router_data *stir_router = data;
 	stir_router->parent = source;
@@ -88,11 +98,6 @@ static void stir_router_add(void *data, obs_source_t *source)
 	} else {
 		obs_frontend_add_event_callback(callback_ready, stir_router);
 	}
-}
-
-static void stir_router_update(void *data, obs_data_t *settings)
-{
-	struct stir_router_data *stir_router = data;
 }
 
 struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *audio)
@@ -112,7 +117,7 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 	for (size_t i = 0; i < sample_ct; i++) {
 		float left = samples0[i];
 		float right = samples1[i];
-		float buf = left + right * 0.5;
+		float buf = left + right * 0.5f;
 
 		stir_router->upmix_buffer[0][i] = buf;
 		stir_router->upmix_buffer[1][i] = buf;
@@ -150,7 +155,7 @@ void stir_router_defaults(obs_data_t *settings)
 	return;
 }
 
-static struct obs_source_info stir_router = {
+struct obs_source_info stir_router_info = {
 	.id = "stir_router",
 	.type = OBS_SOURCE_TYPE_FILTER,
 	.output_flags = OBS_SOURCE_AUDIO,
