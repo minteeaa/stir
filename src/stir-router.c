@@ -1,7 +1,17 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
-int front_loaded;
+int front_loaded = 0;
+
+struct stir_router_data {
+	obs_source_t *virtual_source;
+	float *upmix_buffer[MAX_AUDIO_CHANNELS];
+	obs_source_t *context;
+	obs_source_t *parent;
+	const char *parent_name;
+	size_t channels;
+	float sample_rate;
+};
 
 static const char *stir_router_get_name(void *data)
 {

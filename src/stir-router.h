@@ -3,6 +3,16 @@
 
 #pragma once
 
+struct stir_router_data {
+	obs_source_t *virtual_source;
+	float *upmix_buffer[MAX_AUDIO_CHANNELS];
+	obs_source_t *context;
+	obs_source_t *parent;
+	const char *parent_name;
+	size_t channels;
+	float sample_rate;
+};
+
 static const char *stir_router_get_name(void *data);
 static const char *virtual_source_get_name(void *data);
 static void register_new_stir_source(void *private_data);
