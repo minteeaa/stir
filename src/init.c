@@ -4,6 +4,7 @@
 #include <plugin-support.h>
 
 #include "stir-router.h"
+#include "stir-lowpass.h"
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_AUTHOR("mintea");
@@ -16,6 +17,8 @@ bool obs_module_load(void)
 	obs_log(LOG_INFO, "Router: registered filter");
 	obs_register_source(&virtual_audio_info);
 	obs_log(LOG_INFO, "Router: registered virtual out");
+	obs_register_source(&stir_lowpass_info);
+	obs_log(LOG_INFO, "Lowpass: registered filter");
 	obs_log(LOG_INFO, "STIR loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }

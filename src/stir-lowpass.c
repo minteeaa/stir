@@ -4,20 +4,18 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
-#include "stir-router.h"
-
-static const char *stir_lowpass_get_name(void *data)
+const char *stir_lowpass_get_name(void *data)
 {
 	UNUSED_PARAMETER(data);
 	return obs_module_text("STIR Lowpass");
 }
 
-static void *stir_lowpass_create(obs_data_t *settings, obs_source_t *source)
+void *stir_lowpass_create(obs_data_t *settings, obs_source_t *source)
 {
 	return source;
 }
 
-static struct obs_source_info stir_lowpass = {
+struct obs_source_info stir_lowpass_info = {
 	.id = "stir_lowpass",
 	.type = OBS_SOURCE_TYPE_FILTER,
 	.output_flags = OBS_SOURCE_AUDIO,
