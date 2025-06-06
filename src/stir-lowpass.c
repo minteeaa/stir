@@ -4,6 +4,8 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
+#include "stir-lowpass.h"
+
 const char *stir_lowpass_get_name(void *data)
 {
 	UNUSED_PARAMETER(data);
