@@ -34,7 +34,22 @@ if(ENABLE_QT)
   )
 endif()
 
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/init.c)
+target_sources(${CMAKE_PROJECT_NAME} 
+    PRIVATE 
+	src/filters/stir-gain.c
+	src/filters/stir-gain.h
+	src/filters/stir-lowpass.c
+	src/filters/stir-lowpass.h
+	src/filters/stir-router.c
+	src/filters/stir-router.h
+        src/init.c
+	src/chain.c
+	src/chain.h
+	src/stir-context.c
+	src/stir-context.h
+        src/util.c
+        src/util.h
+)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
 

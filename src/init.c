@@ -3,8 +3,9 @@
 #include <obs-audio-controls.h>
 #include <plugin-support.h>
 
-#include "stir-router.h"
-#include "stir-lowpass.h"
+#include "filters/stir-router.h"
+#include "filters/stir-lowpass.h"
+#include "filters/stir-gain.h"
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_AUTHOR("mintea");
@@ -19,6 +20,8 @@ bool obs_module_load(void)
 	obs_log(LOG_INFO, "Router: registered virtual out");
 	obs_register_source(&stir_lowpass_info);
 	obs_log(LOG_INFO, "Lowpass: registered filter");
+	obs_register_source(&stir_gain_info);
+	obs_log(LOG_INFO, "Gain: registered filter");
 	obs_log(LOG_INFO, "STIR loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }
