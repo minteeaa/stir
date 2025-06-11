@@ -1,39 +1,125 @@
 #include "chain.h"
+#include "ext/uthash.h"
+#include "plugin-support.h"
 
-#define MAX_FILTERS 16
+#define MAX_FILTERS 16 // arbitrary limit for now, will likely become dynamic in the future
 
-typedef struct {
-	const char *type_name;
+struct filter_entry {
 	void *instance;
 	filter_process_fn process;
 	void *userdata;
-} filter_entry_t;
+};
 
-static filter_entry_t chain[MAX_FILTERS];
-static size_t chain_length = 0;
+typedef struct filter_chain {
+	struct filter_entry filters[MAX_FILTERS];
+	size_t length;
+	bool has_router;
+} filter_chain_t;
 
-void stir_register_filter(const char* type_name, void* instance, filter_process_fn fn, void* userdata) {
-	if (chain_length >= MAX_FILTERS)
-		return;
+struct source_chain_info {
+	obs_source_t *source;
+	filter_chain_t *chain;
+	UT_hash_handle hh;
+};
 
-	chain[chain_length++] =
-		(filter_entry_t){.type_name = type_name, .instance = instance, .process = fn, .userdata = userdata};
+static struct source_chain_info *source_chains = NULL;
+static size_t enum_index;
+
+void chain_map_insert(obs_source_t *source, filter_chain_t *chain) {
+	struct source_chain_info *entry = bzalloc(sizeof(*entry));
+	entry->source = source;
+	entry->chain = chain;
+	HASH_ADD_PTR(source_chains, source, entry);
 }
 
-void stir_unregister_filter(void *instance)
-{
-	for (size_t i = 0; i < chain_length; ++i) {
-		if (chain[i].instance == instance) {
-			for (size_t j = i; j < chain_length - 1; ++j) {
-				chain[j] = chain[j + 1];
+filter_chain_t *chain_map_find(obs_source_t *source) {
+	struct source_chain_info *entry;
+	HASH_FIND_PTR(source_chains, &source, entry);
+	return entry ? entry->chain : NULL;
+}
+
+void chain_map_remove(obs_source_t *source) {
+	struct source_chain_info *entry;
+	HASH_FIND_PTR(source_chains, &source, entry);
+	if (entry) {
+		HASH_DEL(source_chains, entry);
+		bfree(entry);
+	}
+}
+
+void stir_register_filter(obs_source_t *source, const char* type_name, void* instance, filter_process_fn fn, void* userdata) {
+	filter_chain_t *chain = chain_map_find(source);
+	if (chain == NULL) {
+		filter_chain_t *new_filter_chain = bzalloc(sizeof(filter_chain_t));
+		new_filter_chain->filters[new_filter_chain->length] = (struct filter_entry) {
+									.instance = instance,
+									.process = fn,
+									.userdata = userdata
+		};
+		new_filter_chain->has_router = false;
+		new_filter_chain->length++;
+		chain_map_insert(source, new_filter_chain);
+	} else {
+		if (chain->length >= MAX_FILTERS)
+			return;
+		
+		chain->filters[chain->length] = (struct filter_entry) {
+									.instance = instance,	
+									.process = fn,
+									.userdata = userdata
+		};
+		chain->length++;
+	}
+}
+
+void stir_unregister_filter(obs_source_t *source, void *instance) {
+	filter_chain_t *chain = chain_map_find(source);
+	for (size_t i = 0; i < chain->length; ++i) {
+		if (chain->filters[i].instance == instance) {
+			for (size_t j = i; j < chain->length - 1; ++j) {
+				chain->filters[j] = chain->filters[j + 1];
 			}
-			chain_length--;
+			chain->length--;
+			if (chain->length == 0) {
+				obs_source_release(instance);
+				bfree(chain);
+				chain_map_remove(source);
+			}
 		}
 	}
 }
 
-void stir_process_filters(stir_context_t *ctx)
-{
-	for (size_t i = 0; i < chain_length; ++i)
-		chain[i].process(ctx, chain[i].userdata);
+void stir_process_filters(obs_source_t *source, stir_context_t *ctx, uint32_t samples) {
+	filter_chain_t *chain = chain_map_find(source);
+	if (chain) {
+		for (size_t i = 0; i < chain->length; ++i) {
+			chain->filters[i].process(ctx, chain->filters[i].userdata, samples);
+		}
+	}
+}
+
+static void filter_enum_cb(obs_source_t *parent, obs_source_t *child, void *param) {
+	filter_chain_t *chain = chain_map_find(parent);
+	filter_chain_t *new_chain = param;
+	for (size_t i = 0; i < chain->length; ++i) {
+		if (chain->filters[i].instance == child) {
+			new_chain->filters[enum_index] = (struct filter_entry) {
+				.instance = chain->filters[i].instance,
+				.process = chain->filters[i].process,
+				.userdata = chain->filters[i].userdata
+			};
+			enum_index++;
+		}
+	}
+}
+
+void update_stir_filter_order(obs_source_t* source) {
+	filter_chain_t *chain = chain_map_find(source);
+	if (chain) {
+		filter_chain_t *new_chain = bzalloc(sizeof(filter_chain_t));
+		enum_index = 0;
+		obs_source_enum_filters(source, filter_enum_cb, new_chain);
+		chain = new_chain;
+		bfree(new_chain);
+	}
 }
