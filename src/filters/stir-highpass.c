@@ -73,14 +73,6 @@ const char *stir_highpass_get_name(void *data)
 	return obs_module_text("STIR Highpass");
 }
 
-void *stir_highpass_create(obs_data_t *settings, obs_source_t *source)
-{
-	struct highpass_state *state = bzalloc(sizeof(struct highpass_state));
-	state->channels = audio_output_get_channels(obs_get_audio());
-	state->context = source;
-	return state;
-}
-
 void stir_highpass_destroy(void *data)
 {
 	struct highpass_state *state = data;
@@ -105,6 +97,15 @@ void stir_highpass_update(void* data, obs_data_t* settings) {
 		struct channel_variables *channel_vars = &state->channel_state[i];
 		butterworth_calculate_highpass(state, channel_vars);
 	}
+}
+
+void *stir_highpass_create(obs_data_t *settings, obs_source_t *source)
+{
+	struct highpass_state *state = bzalloc(sizeof(struct highpass_state));
+	state->channels = audio_output_get_channels(obs_get_audio());
+	state->context = source;
+	stir_highpass_update(state, settings);
+	return state;
 }
 
 static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect)

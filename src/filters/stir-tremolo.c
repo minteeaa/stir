@@ -34,14 +34,6 @@ const char *stir_tremolo_get_name(void *data)
 	return obs_module_text("STIR Tremolo");
 }
 
-void *stir_tremolo_create(obs_data_t *settings, obs_source_t *source)
-{
-	struct tremolo_state *state = bzalloc(sizeof(struct tremolo_state));
-	state->channels = audio_output_get_channels(obs_get_audio());
-	state->context = source;
-	return state;
-}
-
 void stir_tremolo_destroy(void *data)
 {
 	struct tremolo_state *state = data;
@@ -62,6 +54,15 @@ void stir_tremolo_update(void* data, obs_data_t* settings) {
 			state->mask &= ~(1 << ch);
 		}
 	}
+}
+
+void *stir_tremolo_create(obs_data_t *settings, obs_source_t *source)
+{
+	struct tremolo_state *state = bzalloc(sizeof(struct tremolo_state));
+	state->channels = audio_output_get_channels(obs_get_audio());
+	state->context = source;
+	stir_tremolo_update(state, settings);
+	return state;
 }
 
 float tremolo(struct tremolo_state *state, struct channel_variables *vars, float in) {
