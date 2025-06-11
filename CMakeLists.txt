@@ -42,13 +42,18 @@ target_sources(${CMAKE_PROJECT_NAME}
 	src/filters/stir-lowpass.h
 	src/filters/stir-router.c
 	src/filters/stir-router.h
-        src/init.c
+	src/filters/stir-highpass.c
+	src/filters/stir-highpass.h
+	src/filters/stir-tremolo.c
+	src/filters/stir-tremolo.h
+    src/init.c
 	src/chain.c
 	src/chain.h
 	src/stir-context.c
 	src/stir-context.h
-        src/util.c
-        src/util.h
+    src/util.c
+    src/util.h
+	src/ext/uthash.h
 )
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
