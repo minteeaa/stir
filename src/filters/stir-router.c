@@ -1,12 +1,13 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
+#include <plugin-support.h>
 
 #include "util.h"
 #include "filters/stir-router.h"
 #include "stir-context.h"
 #include "chain.h"
 
-int front_loaded = 0;
+bool front_loaded = false;
 
 struct stir_router_data {
 	obs_source_t *virtual_source;
@@ -17,6 +18,7 @@ struct stir_router_data {
 	float sample_rate;
 
 	stir_context_t *buffer_context;
+	signal_handler_t *parent_sig_handler;
 };
 
 const char *stir_router_get_name(void *data)
@@ -47,11 +49,17 @@ void register_new_stir_source(void *private_data)
 	obs_source_set_audio_mixers(stir_router->virtual_source, 0x1);
 }
 
+static void update_filter_chain(void *private_data, calldata_t *cd)
+{
+	struct stir_router_data *stir_router = private_data;
+	update_stir_filter_order(stir_router->parent);
+}
+
 void callback_ready(enum obs_frontend_event event, void *private_data)
 {
 	struct stir_router_data *stir_router = private_data;
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
-		front_loaded = 1;
+		front_loaded = true;
 		register_new_stir_source(stir_router);
 	}
 }
@@ -82,6 +90,7 @@ void stir_router_destroy(void *data)
 		obs_source_release(stir_router->virtual_source);
 	}
 	stir_context_destroy(stir_router->buffer_context);
+	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters", update_filter_chain, stir_router);
 	bfree(stir_router);
 }
 
@@ -91,11 +100,12 @@ void stir_router_add(void *data, obs_source_t *source)
 	stir_router->parent = source;
 	stir_router->parent_name = obs_source_get_name(source);
 
-	if (front_loaded == 1) {
+	if (front_loaded == true) {
 		register_new_stir_source(stir_router);
 	} else {
 		obs_frontend_add_event_callback(callback_ready, stir_router);
 	}
+	signal_handler_connect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters", update_filter_chain, stir_router);
 }
 
 struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *audio)
@@ -130,7 +140,7 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 		buffer[5 * buf_frames + i] = buf;
 	}
 
-	stir_process_filters(ctx);
+	stir_process_filters(stir_router->parent, ctx, sample_ct);
 
 	struct obs_source_audio audio_o = {
 		.speakers = SPEAKERS_5POINT1,
@@ -158,6 +168,10 @@ static obs_properties_t *stir_router_properties(void *data)
 void stir_router_defaults(obs_data_t *settings)
 {
 	return;
+}
+
+void stir_router_filter_order(obs_source_t *source, void *data) {
+
 }
 
 struct obs_source_info stir_router_info = {

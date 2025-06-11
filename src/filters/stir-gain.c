@@ -1,15 +1,18 @@
 #include <obs-module.h>
 #include <plugin-support.h>
 #include <stdio.h>
+#include <media-io/audio-math.h>
 
 #include "stir-context.h"
 #include "chain.h"
 
-typedef struct {
+struct gain_state {
+	obs_source_t *context;
+
 	float gain;
 	uint8_t mask;
 	size_t channels;
-} gain_state_t;
+};
 
 const char *stir_gain_get_name(void *data)
 {
@@ -19,13 +22,13 @@ const char *stir_gain_get_name(void *data)
 
 void stir_gain_destroy(void *data)
 {
-	gain_state_t *state = data;
+	struct gain_state *state = data;
 	bfree(state);
 }
 
 void stir_gain_update(void* data, obs_data_t* settings) {
-	gain_state_t *state = data;
-	state->gain = (float)obs_data_get_double(settings, "gain");
+	struct gain_state *state = data;
+	state->gain = db_to_mul((float)obs_data_get_double(settings, "gain"));
 
 	for (int ch = 0; ch < state->channels; ++ch) {
 		char key[12];
@@ -40,35 +43,37 @@ void stir_gain_update(void* data, obs_data_t* settings) {
 
 void *stir_gain_create(obs_data_t *settings, obs_source_t *source)
 {
-	gain_state_t *state = bzalloc(sizeof(gain_state_t));
+	struct gain_state *state = bzalloc(sizeof(struct gain_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
+	state->context = source;
 	stir_gain_update(state, settings);
 	return state;
 }
 
-static void process_audio(stir_context_t *ctx, void *userdata)
+static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect)
 {
-	gain_state_t *state = (gain_state_t *)userdata;
+	struct gain_state *state = (struct gain_state *)userdata;
 	float *buf = stir_get_buf(ctx);
 	size_t f = stir_buf_get_frames(ctx);
 	for (size_t i = 0; i < state->channels; ++i) {
 		if (state->mask & (1 << i)) {
-			buf[i * f] *= state->gain;
+			for (size_t fr = 0; fr < samplect; ++fr) {
+				buf[i * f + fr] *= state->gain;
+			}
 		}
 	}
 }
 
 void stir_gain_add(void *data, obs_source_t *source)
 {
-	gain_state_t *state = data;
-
-	stir_register_filter("gain", state, process_audio, state);
+	struct gain_state *state = data;
+	stir_register_filter(source, "gain", state->context, process_audio, state);
 }
 
 void stir_gain_remove(void *data, obs_source_t *source)
 {
-	gain_state_t *state = data;
-	stir_unregister_filter(state);
+	struct gain_state *state = data;
+	stir_unregister_filter(source, state->context);
 }
 
 obs_properties_t* stir_gain_properties(void* data) {
