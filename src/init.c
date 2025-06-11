@@ -6,6 +6,8 @@
 #include "filters/stir-router.h"
 #include "filters/stir-lowpass.h"
 #include "filters/stir-gain.h"
+#include "filters/stir-tremolo.h"
+#include "filters/stir-highpass.h"
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_AUTHOR("mintea");
@@ -22,6 +24,10 @@ bool obs_module_load(void)
 	obs_log(LOG_INFO, "Lowpass: registered filter");
 	obs_register_source(&stir_gain_info);
 	obs_log(LOG_INFO, "Gain: registered filter");
+	obs_register_source(&stir_tremolo_info);
+	obs_log(LOG_INFO, "Tremolo: registered filter");
+	obs_register_source(&stir_highpass_info);
+	obs_log(LOG_INFO, "Highpass: registered filter");
 	obs_log(LOG_INFO, "STIR loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }
