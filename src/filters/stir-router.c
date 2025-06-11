@@ -198,7 +198,11 @@ static obs_properties_t *stir_router_properties(void *data)
 
 void stir_router_defaults(obs_data_t *settings)
 {
-	return;
+	for (int k = 0; k < MAX_AUDIO_CHANNELS; ++k) {
+		char id[12];
+		snprintf(id, sizeof(id), "ch_src_%d", k);
+		obs_data_set_default_string(settings, id, "stereo_mix");
+	}
 }
 
 struct obs_source_info stir_router_info = {
