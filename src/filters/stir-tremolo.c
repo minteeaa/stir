@@ -106,12 +106,13 @@ obs_properties_t *stir_tremolo_properties(void *data)
 	UNUSED_PARAMETER(data);
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *tremolo_channels = obs_properties_create();
-	obs_properties_add_bool(tremolo_channels, "lfo_ch_0", "Channel 1");
-	obs_properties_add_bool(tremolo_channels, "lfo_ch_1", "Channel 2");
-	obs_properties_add_bool(tremolo_channels, "lfo_ch_2", "Channel 3");
-	obs_properties_add_bool(tremolo_channels, "lfo_ch_3", "Channel 4");
-	obs_properties_add_bool(tremolo_channels, "lfo_ch_4", "Channel 5");
-	obs_properties_add_bool(tremolo_channels, "lfo_ch_5", "Channel 6");
+	for (int k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
+		char id[12];
+		snprintf(id, sizeof(id), "lfo_ch_%d", k);
+		char desc[12];
+		snprintf(desc, sizeof(desc), "Channel %d", k + 1);
+		obs_properties_add_bool(tremolo_channels, id, desc);
+	}
 	obs_properties_add_group(props, "tremolo_channels", "Channels", OBS_GROUP_NORMAL, tremolo_channels);
 
 	obs_properties_add_float_slider(props, "tremolo_rate", "Rate", 0.0, 20.0, 0.1);
@@ -121,13 +122,11 @@ obs_properties_t *stir_tremolo_properties(void *data)
 
 void stir_tremolo_defaults(obs_data_t *settings)
 {
-	obs_data_set_default_bool(settings, "lfo_ch_0", false);
-	obs_data_set_default_bool(settings, "lfo_ch_1", false);
-	obs_data_set_default_bool(settings, "lfo_ch_2", false);
-	obs_data_set_default_bool(settings, "lfo_ch_3", false);
-	obs_data_set_default_bool(settings, "lfo_ch_4", false);
-	obs_data_set_default_bool(settings, "lfo_ch_5", false);
-
+	for (int k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
+		char id[12];
+		snprintf(id, sizeof(id), "lfo_ch_%d", k);
+		obs_data_set_default_bool(settings, id, false);
+	}
 	obs_data_set_default_double(settings, "tremolo_rate", 4.0);
 	obs_data_set_default_double(settings, "tremolo_depth", 0.5);
 }

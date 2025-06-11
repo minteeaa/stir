@@ -80,12 +80,13 @@ obs_properties_t* stir_gain_properties(void* data) {
 	UNUSED_PARAMETER(data);
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *gain_channels = obs_properties_create();
-	obs_properties_add_bool(gain_channels, "gain_ch_0", "Channel 1");
-	obs_properties_add_bool(gain_channels, "gain_ch_1", "Channel 2");
-	obs_properties_add_bool(gain_channels, "gain_ch_2", "Channel 3");
-	obs_properties_add_bool(gain_channels, "gain_ch_3", "Channel 4");
-	obs_properties_add_bool(gain_channels, "gain_ch_4", "Channel 5");
-	obs_properties_add_bool(gain_channels, "gain_ch_5", "Channel 6");
+	for (int k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
+		char id[12];
+		snprintf(id, sizeof(id), "gain_ch_%d", k);
+		char desc[12];
+		snprintf(desc, sizeof(desc), "Channel %d", k + 1);
+		obs_properties_add_bool(gain_channels, id, desc);
+	}
 	obs_properties_add_group(props, "gain_channels", "Channels", OBS_GROUP_NORMAL, gain_channels);
 	obs_properties_add_float_slider(props, "gain", "Gain Amount", 0.0, 30.0, 0.1);
 	return props;
@@ -93,12 +94,11 @@ obs_properties_t* stir_gain_properties(void* data) {
 
 void stir_gain_defaults(obs_data_t *settings)
 {
-	obs_data_set_default_bool(settings, "gain_ch_1", false);
-	obs_data_set_default_bool(settings, "gain_ch_2", false);
-	obs_data_set_default_bool(settings, "gain_ch_3", false);
-	obs_data_set_default_bool(settings, "gain_ch_4", false);
-	obs_data_set_default_bool(settings, "gain_ch_5", false);
-	obs_data_set_default_bool(settings, "gain_ch_6", false);
+	for (int k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
+		char id[12];
+		snprintf(id, sizeof(id), "gain_ch_%d", k);
+		obs_data_set_default_bool(settings, id, false);
+	}
 	obs_data_set_default_double(settings, "gain", 0.0);
 }
 

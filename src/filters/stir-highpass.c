@@ -138,12 +138,13 @@ obs_properties_t *stir_highpass_properties(void *data)
 	UNUSED_PARAMETER(data);
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *highpass_channels = obs_properties_create();
-	obs_properties_add_bool(highpass_channels, "hp_ch_0", "Channel 1");
-	obs_properties_add_bool(highpass_channels, "hp_ch_1", "Channel 2");
-	obs_properties_add_bool(highpass_channels, "hp_ch_2", "Channel 3");
-	obs_properties_add_bool(highpass_channels, "hp_ch_3", "Channel 4");
-	obs_properties_add_bool(highpass_channels, "hp_ch_4", "Channel 5");
-	obs_properties_add_bool(highpass_channels, "hp_ch_5", "Channel 6");
+	for (int k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
+		char id[12];
+		snprintf(id, sizeof(id), "hp_ch_%d", k);
+		char desc[12];
+		snprintf(desc, sizeof(desc), "Channel %d", k + 1);
+		obs_properties_add_bool(highpass_channels, id, desc);
+	}
 	obs_properties_add_group(props, "highpass_channels", "Channels", OBS_GROUP_NORMAL, highpass_channels);
 
 	obs_properties_add_float_slider(props, "hp_cutoff_freq", "Cutoff Frequency", 1000.0, 2500.0, 1.0);
@@ -153,13 +154,11 @@ obs_properties_t *stir_highpass_properties(void *data)
 
 void stir_highpass_defaults(obs_data_t *settings)
 {
-	obs_data_set_default_bool(settings, "hp_ch_0", false);
-	obs_data_set_default_bool(settings, "hp_ch_1", false);
-	obs_data_set_default_bool(settings, "hp_ch_2", false);
-	obs_data_set_default_bool(settings, "hp_ch_3", false);
-	obs_data_set_default_bool(settings, "hp_ch_4", false);
-	obs_data_set_default_bool(settings, "hp_ch_5", false);
-
+	for (int k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
+		char id[12];
+		snprintf(id, sizeof(id), "hp_ch_%d", k);
+		obs_data_set_default_bool(settings, id, false);
+	}
 	obs_data_set_default_double(settings, "hp_cutoff_freq", 2000.0);
 	obs_data_set_default_double(settings, "hp_intensity", 1.0);
 }
