@@ -88,7 +88,8 @@ obs_properties_t* stir_gain_properties(void* data) {
 		obs_properties_add_bool(gain_channels, id, desc);
 	}
 	obs_properties_add_group(props, "gain_channels", "Channels", OBS_GROUP_NORMAL, gain_channels);
-	obs_properties_add_float_slider(props, "gain", "Gain Amount", 0.0, 30.0, 0.1);
+	obs_property_t *p = obs_properties_add_float_slider(props, "gain", "Gain Amount", 0.0, 30.0, 0.1);
+	obs_property_float_set_suffix(p, " dB");
 	return props;
 }
 

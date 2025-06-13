@@ -43,7 +43,7 @@ void stir_tremolo_destroy(void *data)
 void stir_tremolo_update(void* data, obs_data_t* settings) {
 	struct tremolo_state *state = data;
 	state->rate = (float)obs_data_get_double(settings, "tremolo_rate");
-	state->depth = (float)obs_data_get_double(settings, "tremolo_depth");
+	state->depth = (float)obs_data_get_double(settings, "tremolo_depth") * 0.01f;
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 	for (int ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
 		char key[12];
@@ -115,8 +115,10 @@ obs_properties_t *stir_tremolo_properties(void *data)
 	}
 	obs_properties_add_group(props, "tremolo_channels", "Channels", OBS_GROUP_NORMAL, tremolo_channels);
 
-	obs_properties_add_float_slider(props, "tremolo_rate", "Rate", 0.0, 20.0, 0.1);
-	obs_properties_add_float_slider(props, "tremolo_depth", "Depth", 0.0, 1.0, 0.01);
+	obs_property_t *r = obs_properties_add_float_slider(props, "tremolo_rate", "Rate", 0.0, 20.0, 0.1);
+	obs_property_t *d = obs_properties_add_float_slider(props, "tremolo_depth", "Depth", 0.0, 100.0, 0.5);
+	obs_property_float_set_suffix(r, " Hz");
+	obs_property_float_set_suffix(d, "%");
 	return props;
 }
 
@@ -128,7 +130,7 @@ void stir_tremolo_defaults(obs_data_t *settings)
 		obs_data_set_default_bool(settings, id, false);
 	}
 	obs_data_set_default_double(settings, "tremolo_rate", 4.0);
-	obs_data_set_default_double(settings, "tremolo_depth", 0.5);
+	obs_data_set_default_double(settings, "tremolo_depth", 50.0);
 }
 
 struct obs_source_info stir_tremolo_info = {

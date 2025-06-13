@@ -81,7 +81,7 @@ void stir_lowpass_destroy(void *data)
 
 void stir_lowpass_update(void* data, obs_data_t* settings) {
 	struct lowpass_state *state = data;
-	state->intensity = (float)obs_data_get_double(settings, "lp_intensity");
+	state->intensity = (float)obs_data_get_double(settings, "lp_intensity") * 0.01f;
 	state->cutoff = (float)obs_data_get_double(settings, "lp_cutoff_freq");
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 	for (int ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
@@ -147,8 +147,10 @@ obs_properties_t *stir_lowpass_properties(void *data)
 	}
 	obs_properties_add_group(props, "lowpass_channels", "Channels", OBS_GROUP_NORMAL, lowpass_channels);
 
-	obs_properties_add_float_slider(props, "lp_cutoff_freq", "Cutoff Frequency", 10.0, 350.0, 1.0);
-	obs_properties_add_float_slider(props, "lp_intensity", "Intensity", 0.01, 1.0, 0.01);
+	obs_property_t *lf = obs_properties_add_float_slider(props, "lp_cutoff_freq", "Cutoff", 10.0, 350.0, 1.0);
+	obs_property_t *i = obs_properties_add_float_slider(props, "lp_intensity", "Intensity", 1.0, 100.0, 0.5);
+	obs_property_float_set_suffix(lf, " Hz");
+	obs_property_float_set_suffix(i, "%");
 	return props;
 }
 
@@ -160,7 +162,7 @@ void stir_lowpass_defaults(obs_data_t *settings)
 		obs_data_set_default_bool(settings, id, false);
 	}
 	obs_data_set_default_double(settings, "lp_cutoff_freq", 100.0);
-	obs_data_set_default_double(settings, "lp_intensity", 1.0);
+	obs_data_set_default_double(settings, "lp_intensity", 100.0);
 }
 
 struct obs_source_info stir_lowpass_info = {
