@@ -76,8 +76,10 @@ void stir_router_update(void *data, obs_data_t *settings)
 			stir_router->ch_config[ch] = 0;
 		} else if (strcmp(obs_data_get_string(settings, id), "mono_right") == 0) {
 			stir_router->ch_config[ch] = 1;
-		} else {
+		} else if (strcmp(obs_data_get_string(settings, id), "stereo_mix") == 0) {
 			stir_router->ch_config[ch] = 2;
+		} else {
+			stir_router->ch_config[ch] = 3;
 		}
 	}
 }
@@ -154,6 +156,10 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 
 			if (stir_router->ch_config[ch] == 2)
 				buffer[ch * buf_frames + i] = mix;
+
+			if (stir_router->ch_config[ch] == 3) {
+				buffer[ch * buf_frames + i] = 0.0f;			
+			}
 		}
 	}
 
@@ -192,6 +198,7 @@ static obs_properties_t *stir_router_properties(void *data)
 		obs_property_list_add_string(chs[k], "Mono Left", "mono_left");
 		obs_property_list_add_string(chs[k], "Mono Right", "mono_right");
 		obs_property_list_add_string(chs[k], "Stereo Mix (L+R)", "stereo_mix");
+		obs_property_list_add_string(chs[k], "None", "none");
 	}
 	return props;
 }
