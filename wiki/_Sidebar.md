@@ -1,13 +1,14 @@
 ## Usage
-* [Setup](./Usage.Setup.md)
-* [Post Setup](./Usage.Post-Setup.md)
+* [Getting Started](./Getting-Started.md)
 
-## Unity
-* [Setup](./Unity.Setup.md)
+## Filters
+* [Router](./Filters.Router.md)
+* [Gain](./Filters.Gain.md)
+* [Lowpass](./Filters.Lowpass.md)
+* [Highpass](./Filters.Highpass.md)
+* [Tremolo](./Filters.Tremolo.md)
 
-## Video Player Presets
-* [ProTV](./Player-Presets.ProTV.md)
-
-## Extra
-* [Steam Audio](./Extra.Steam-Audio.md)
-* [Test Worlds](./Extra.Testing-Worlds.md)
+## VRChat
+* [World Usage](./VRChat.World-Usage.md)
+* [Steam Audio](./VRChat.Steam-Audio.md)
+* [Testing Worlds](./VRChat.Testing-Worlds.md)

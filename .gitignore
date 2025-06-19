@@ -21,6 +21,7 @@
 
 # Wiki files too
 !/wiki
+!/wiki.old
 
 # Exclude lock files
 *.lock.json
