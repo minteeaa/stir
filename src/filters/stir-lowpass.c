@@ -147,7 +147,7 @@ obs_properties_t *stir_lowpass_properties(void *data)
 	}
 	obs_properties_add_group(props, "lowpass_channels", "Channels", OBS_GROUP_NORMAL, lowpass_channels);
 
-	obs_property_t *lf = obs_properties_add_float_slider(props, "lp_cutoff_freq", "Cutoff", 10.0, 350.0, 1.0);
+	obs_property_t *lf = obs_properties_add_float_slider(props, "lp_cutoff_freq", "Cutoff", 10.0, 2000.0, 1.0);
 	obs_property_t *i = obs_properties_add_float_slider(props, "lp_intensity", "Intensity", 1.0, 100.0, 0.5);
 	obs_property_float_set_suffix(lf, " Hz");
 	obs_property_float_set_suffix(i, "%");
