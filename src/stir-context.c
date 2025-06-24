@@ -1,5 +1,3 @@
-#include <obs-module.h>
-
 #include "stir-context.h"
 
 stir_context_t *stir_context_create(void) {

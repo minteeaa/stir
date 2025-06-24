@@ -6,6 +6,7 @@
 #include "filters/stir-router.h"
 #include "stir-context.h"
 #include "chain.h"
+#include "util/c99defs.h"
 
 bool front_loaded = false;
 
@@ -53,6 +54,7 @@ void register_new_stir_source(void *private_data)
 
 static void update_filter_chain(void *private_data, calldata_t *cd)
 {
+	UNUSED_PARAMETER(cd);
 	struct stir_router_data *stir_router = private_data;
 	update_stir_filter_order(stir_router->parent);
 }
@@ -70,7 +72,7 @@ void stir_router_update(void *data, obs_data_t *settings)
 {
 	struct stir_router_data *stir_router = data;
 	char id[12];
-	for (int ch = 0; ch < stir_router->channels; ++ch) {
+	for (int ch = 0; (size_t)ch < stir_router->channels; ++ch) {
 		snprintf(id, sizeof(id), "ch_src_%d", ch);
 		if (strcmp(obs_data_get_string(settings, id), "mono_left") == 0) {
 			stir_router->ch_config[ch] = 0;
@@ -142,7 +144,7 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 	float *buffer = stir_get_buf(ctx);
 	size_t buf_frames = stir_buf_get_frames(ctx);
 
-	for (int ch = 0; ch < channels; ++ch) {
+	for (size_t ch = 0; ch < channels; ++ch) {
 		for (size_t i = 0; i < sample_ct; i++) {
 			float left = audio_data[0][i];
 			float right = audio_data[1][i];
@@ -181,15 +183,14 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 	return audio;
 }
 
-static obs_properties_t *stir_router_properties(void *data)
+obs_properties_t *stir_router_properties(void *data)
 {
 	struct stir_router_data *stir_router = data;
-	size_t channels = stir_router->channels;
 	obs_property_t *chs[6];
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *channel_sources = obs_properties_create();
 	obs_properties_add_group(props, "channel_sources", "Channel Sources", OBS_GROUP_NORMAL, channel_sources);
-	for (int k = 0; k < stir_router->channels; ++k) {
+	for (int k = 0; (size_t)k < stir_router->channels; ++k) {
 		char id[12];
 		snprintf(id, sizeof(id), "ch_src_%d", k);
 		char desc[12];

@@ -1,14 +1,10 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <.deps/include/graphics/math-defs.h>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
-#include "plugin-support.h"
-
 #include "filters/stir-tremolo.h"
-#include "filters/stir-router.h"
 #include "stir-context.h"
 #include "chain.h"
 
@@ -106,10 +102,10 @@ obs_properties_t *stir_tremolo_properties(void *data)
 	UNUSED_PARAMETER(data);
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *tremolo_channels = obs_properties_create();
-	for (int k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[12];
+	for (int k = 0; (size_t)k < audio_output_get_channels(obs_get_audio()); ++k) {
+		char id[18];
 		snprintf(id, sizeof(id), "lfo_ch_%d", k);
-		char desc[12];
+		char desc[19];
 		snprintf(desc, sizeof(desc), "Channel %d", k + 1);
 		obs_properties_add_bool(tremolo_channels, id, desc);
 	}
@@ -124,8 +120,8 @@ obs_properties_t *stir_tremolo_properties(void *data)
 
 void stir_tremolo_defaults(obs_data_t *settings)
 {
-	for (int k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[12];
+	for (int k = 0; (size_t)k < audio_output_get_channels(obs_get_audio()); ++k) {
+		char id[18];
 		snprintf(id, sizeof(id), "lfo_ch_%d", k);
 		obs_data_set_default_bool(settings, id, false);
 	}

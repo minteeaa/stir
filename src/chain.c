@@ -1,6 +1,6 @@
 #include "chain.h"
 #include "ext/uthash.h"
-#include "plugin-support.h"
+#include "util/c99defs.h"
 
 #define MAX_FILTERS 16 // arbitrary limit for now, will likely become dynamic in the future
 
@@ -48,6 +48,7 @@ void chain_map_remove(obs_source_t *source) {
 }
 
 void stir_register_filter(obs_source_t *source, const char* type_name, void* instance, filter_process_fn fn, void* userdata) {
+	UNUSED_PARAMETER(type_name);
 	filter_chain_t *chain = chain_map_find(source);
 	if (chain == NULL) {
 		filter_chain_t *new_filter_chain = bzalloc(sizeof(filter_chain_t));
