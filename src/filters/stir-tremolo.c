@@ -41,9 +41,9 @@ void stir_tremolo_update(void* data, obs_data_t* settings) {
 	state->rate = (float)obs_data_get_double(settings, "tremolo_rate");
 	state->depth = (float)obs_data_get_double(settings, "tremolo_depth") * 0.01f;
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-	for (int ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
+	for (size_t ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
 		char key[12];
-		snprintf(key, sizeof(key), "lfo_ch_%d", ch);
+		snprintf(key, sizeof(key), "lfo_ch_%zu", ch);
 		if (obs_data_get_bool(settings, key)) {
 			state->mask |= (1 << ch);
 		} else {
@@ -76,12 +76,11 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 {
 	struct tremolo_state *state = (struct tremolo_state *)userdata;
 	float *buf = stir_get_buf(ctx);
-	size_t f = stir_buf_get_frames(ctx);
 	for (size_t i = 0; i < state->channels; ++i) {
 		if (state->mask & (1 << i)) {
 			struct channel_variables *channel_vars = &state->channel_state[i];
 			for (size_t fr = 0; fr < samplect; ++fr) {
-				buf[i * f + fr] = tremolo(state, channel_vars, buf[i * f + fr]);
+				buf[i * samplect + fr] = tremolo(state, channel_vars, buf[i * samplect + fr]);
 			}
 		}
 	}
@@ -102,11 +101,11 @@ obs_properties_t *stir_tremolo_properties(void *data)
 	UNUSED_PARAMETER(data);
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *tremolo_channels = obs_properties_create();
-	for (int k = 0; (size_t)k < audio_output_get_channels(obs_get_audio()); ++k) {
+	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
 		char id[18];
-		snprintf(id, sizeof(id), "lfo_ch_%d", k);
+		snprintf(id, sizeof(id), "lfo_ch_%zu", k);
 		char desc[19];
-		snprintf(desc, sizeof(desc), "Channel %d", k + 1);
+		snprintf(desc, sizeof(desc), "Channel %zu", k + 1);
 		obs_properties_add_bool(tremolo_channels, id, desc);
 	}
 	obs_properties_add_group(props, "tremolo_channels", "Channels", OBS_GROUP_NORMAL, tremolo_channels);
@@ -120,9 +119,9 @@ obs_properties_t *stir_tremolo_properties(void *data)
 
 void stir_tremolo_defaults(obs_data_t *settings)
 {
-	for (int k = 0; (size_t)k < audio_output_get_channels(obs_get_audio()); ++k) {
+	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
 		char id[18];
-		snprintf(id, sizeof(id), "lfo_ch_%d", k);
+		snprintf(id, sizeof(id), "lfo_ch_%zu", k);
 		obs_data_set_default_bool(settings, id, false);
 	}
 	obs_data_set_default_double(settings, "tremolo_rate", 4.0);

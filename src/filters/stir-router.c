@@ -1,7 +1,9 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 #include <plugin-support.h>
+#include <string.h>
 
+#include "media-io/audio-io.h"
 #include "util.h"
 #include "filters/stir-router.h"
 #include "stir-context.h"
@@ -72,8 +74,8 @@ void stir_router_update(void *data, obs_data_t *settings)
 {
 	struct stir_router_data *stir_router = data;
 	char id[12];
-	for (int ch = 0; (size_t)ch < stir_router->channels; ++ch) {
-		snprintf(id, sizeof(id), "ch_src_%d", ch);
+	for (size_t ch = 0; ch < stir_router->channels; ++ch) {
+		snprintf(id, sizeof(id), "ch_src_%zu", ch);
 		if (strcmp(obs_data_get_string(settings, id), "mono_left") == 0) {
 			stir_router->ch_config[ch] = 0;
 		} else if (strcmp(obs_data_get_string(settings, id), "mono_right") == 0) {
@@ -140,28 +142,25 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 	}
 
 	float **audio_data = (float **)audio->data;
-
 	float *buffer = stir_get_buf(ctx);
-	size_t buf_frames = stir_buf_get_frames(ctx);
 
-	for (size_t ch = 0; ch < channels; ++ch) {
-		for (size_t i = 0; i < sample_ct; i++) {
+	for (size_t ch = 0; ch < channels; ch++) {
+		for (uint32_t i = 0; i < sample_ct; i++) {
 			float left = audio_data[0][i];
 			float right = audio_data[1][i];
 			float mix = left + right * 0.5f;
 
-			if (stir_router->ch_config[ch] == 0) 
-				buffer[ch * buf_frames + i] = left;
+			if (stir_router->ch_config[ch] == 0)
+				buffer[ch * sample_ct + i] = left;
 
 			if (stir_router->ch_config[ch] == 1)
-				buffer[ch * buf_frames + i] = right;
+				buffer[ch * sample_ct + i] = right;
 
 			if (stir_router->ch_config[ch] == 2)
-				buffer[ch * buf_frames + i] = mix;
+				buffer[ch * sample_ct + i] = mix;
 
-			if (stir_router->ch_config[ch] == 3) {
-				buffer[ch * buf_frames + i] = 0.0f;			
-			}
+			if (stir_router->ch_config[ch] == 3)
+				buffer[ch * sample_ct + i] = 0.0f;
 		}
 	}
 
@@ -176,7 +175,7 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 	};
 
 	for (size_t ch = 0; ch < channels; ch++) {
-		audio_o.data[ch] = (uint8_t *)(buffer + ch * buf_frames);
+		audio_o.data[ch] = (uint8_t *)(buffer + ch * sample_ct);
 	}
 
 	obs_source_output_audio(stir_router->virtual_source, &audio_o);
@@ -190,11 +189,11 @@ obs_properties_t *stir_router_properties(void *data)
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *channel_sources = obs_properties_create();
 	obs_properties_add_group(props, "channel_sources", "Channel Sources", OBS_GROUP_NORMAL, channel_sources);
-	for (int k = 0; (size_t)k < stir_router->channels; ++k) {
+	for (size_t k = 0; k < stir_router->channels; ++k) {
 		char id[12];
-		snprintf(id, sizeof(id), "ch_src_%d", k);
+		snprintf(id, sizeof(id), "ch_src_%zu", k);
 		char desc[12];
-		snprintf(desc, sizeof(desc), "Channel %d", k + 1);
+		snprintf(desc, sizeof(desc), "Channel %zu", k + 1);
 		chs[k] = obs_properties_add_list(channel_sources, id, desc, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		obs_property_list_add_string(chs[k], "Mono Left", "mono_left");
 		obs_property_list_add_string(chs[k], "Mono Right", "mono_right");
@@ -206,9 +205,9 @@ obs_properties_t *stir_router_properties(void *data)
 
 void stir_router_defaults(obs_data_t *settings)
 {
-	for (int k = 0; k < MAX_AUDIO_CHANNELS; ++k) {
+	for (size_t k = 0; k < MAX_AUDIO_CHANNELS; ++k) {
 		char id[12];
-		snprintf(id, sizeof(id), "ch_src_%d", k);
+		snprintf(id, sizeof(id), "ch_src_%zu", k);
 		obs_data_set_default_string(settings, id, "stereo_mix");
 	}
 }
