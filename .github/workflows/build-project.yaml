@@ -87,6 +87,9 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Make build-ubuntu executable
+        run: chmod +x .github/scripts/build-ubuntu
+
       - name: Set Up Environment
         id: setup
         run: |

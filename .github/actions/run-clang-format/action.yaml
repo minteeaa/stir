@@ -27,11 +27,11 @@ runs:
         checkGlob: "'*.c' '*.h' '*.cpp' '*.hpp' '*.m' '*.mm'"
         diffFilter: 'ACM'
 
-    - name: Install Dependencies 🛍️
+    - name: Install Dependencies
       if: runner.os == 'Linux' && fromJSON(steps.checks.outputs.hasChangedFiles)
       shell: bash
       run: |
-        : Install Dependencies 🛍️
+        : Install Dependencies
         echo ::group::Install Dependencies
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
