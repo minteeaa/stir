@@ -32,5 +32,7 @@ refer to the [wiki](https://github.com/minteeaa/stir/wiki) for setup and usage
 | OS          | support     |
 |-------------|-------------|
 | windows x64 | supported   |
+| linux       | supported   |
 | macOS       | unsupported |
-| linux       | planned     |
+
+> linux has been tested and confirmed to work on Arch Linux. other distros *should* be supported by default. there are no current plans to support macOS.

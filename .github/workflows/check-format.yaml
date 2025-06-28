@@ -10,6 +10,8 @@ jobs:
           fetch-depth: 0
       - name: Make clang-format executable
         run: chmod +x build-aux/run-clang-format
+      - name: Make zsh format executable
+        run: chmod +x build-aux/.run-format.zsh
       - name: clang-format Check
         id: clang-format
         uses: ./.github/actions/run-clang-format
@@ -24,6 +26,8 @@ jobs:
           fetch-depth: 0
       - name: Make gersemi executable
         run: chmod +x build-aux/run-gersemi
+      - name: Make zsh format executable
+        run: chmod +x build-aux/.run-format.zsh
       - name: Gersemi Format Check
         id: gersemi
         uses: ./.github/actions/run-gersemi
