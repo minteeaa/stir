@@ -8,20 +8,19 @@ on:
     branches: [master, main]
     types: [ opened, synchronize, reopened ]
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
-
 jobs:
   check-format:
-    name: Formatting Check
+    name: Check Formatting
     uses: ./.github/workflows/check-format.yaml
     permissions:
       contents: read
 
   build-project:
-    name: Build
+    name: Build Project
     uses: ./.github/workflows/build-project.yaml
     secrets: inherit
     permissions:

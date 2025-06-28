@@ -9,15 +9,10 @@ on:
         type: choice
         options:
           - build
-          - wiki
 permissions:
   contents: write
 jobs:
   check-and-build:
     if: inputs.job == 'build'
     uses: ./.github/workflows/build-project.yaml
-    secrets: inherit
-  publish-wiki:
-    if: inputs.job == 'wiki'
-    uses: ./.github/workflows/wiki.yaml
     secrets: inherit

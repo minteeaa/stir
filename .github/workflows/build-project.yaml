@@ -87,9 +87,6 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Make build-ubuntu executable
-        run: chmod +x .github/scripts/build-ubuntu
-
       - name: Set Up Environment
         id: setup
         run: |
@@ -149,7 +146,7 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.os }}-ccache-x86_64-${{ needs.check-event.outputs.config }}
 
   windows-build:
-    name: Windows Build
+    name: Build for Windows
     runs-on: windows-2022
     needs: check-event
     defaults:
@@ -161,9 +158,10 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Env Setup
+      - name: Set Up Environment
         id: setup
         run: |
+          # Set Up Environment
           if ( $Env:RUNNER_DEBUG -ne $null ) {
             Set-PSDebug -Trace 1
           }
@@ -175,20 +173,20 @@ jobs:
           "pluginName=${ProductName}" >> $env:GITHUB_OUTPUT
           "pluginVersion=${ProductVersion}" >> $env:GITHUB_OUTPUT
 
-      - name: Build Windows Plugin
+      - name: Build Plugin
         uses: ./.github/actions/build-plugin
         with:
           target: x64
           config: ${{ needs.check-event.outputs.config }}
 
-      - name: Package Plugin Artifacts
+      - name: Package Plugin
         uses: ./.github/actions/package-plugin
         with:
           target: x64
           config: ${{ needs.check-event.outputs.config }}
           package: ${{ fromJSON(needs.check-event.outputs.package) }}
 
-      - name: Expose Artifacts
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup.outputs.pluginName }}-${{ steps.setup.outputs.pluginVersion }}-windows-x64-${{ needs.check-event.outputs.commitHash }}

@@ -8,7 +8,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: clang-format Check
+      - name: clang-format check
         id: clang-format
         uses: ./.github/actions/run-clang-format
         with:
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Gersemi Format Check
+      - name: gersemi Check
         id: gersemi
         uses: ./.github/actions/run-gersemi
         with:
