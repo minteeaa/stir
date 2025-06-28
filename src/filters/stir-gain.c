@@ -31,8 +31,8 @@ void stir_gain_update(void* data, obs_data_t* settings) {
 	state->gain = db_to_mul((float)obs_data_get_double(settings, "gain"));
 
 	for (size_t ch = 0; ch < state->channels; ++ch) {
-		char key[19];
-		snprintf(key, sizeof(key), "gain_ch_%zu", ch);
+		char key[12];
+		snprintf(key, sizeof(key), "gain_ch_%zu", ch % 6u);
 		if (obs_data_get_bool(settings, key)) {
 			state->mask |= (1 << ch);
 		} else {
@@ -80,10 +80,10 @@ obs_properties_t* stir_gain_properties(void* data) {
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *gain_channels = obs_properties_create();
 	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[19];
-		snprintf(id, sizeof(id), "gain_ch_%zu", k);
-		char desc[19];
-		snprintf(desc, sizeof(desc), "Channel %zu", k + 1);
+		char id[12];
+		snprintf(id, sizeof(id), "gain_ch_%zu", k % 6u);
+		char desc[12];
+		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 7u);
 		obs_properties_add_bool(gain_channels, id, desc);
 	}
 	obs_properties_add_group(props, "gain_channels", "Channels", OBS_GROUP_NORMAL, gain_channels);
@@ -95,8 +95,8 @@ obs_properties_t* stir_gain_properties(void* data) {
 void stir_gain_defaults(obs_data_t *settings)
 {
 	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[19];
-		snprintf(id, sizeof(id), "gain_ch_%zu", k);
+		char id[12];
+		snprintf(id, sizeof(id), "gain_ch_%zu", k % 6u);
 		obs_data_set_default_bool(settings, id, false);
 	}
 	obs_data_set_default_double(settings, "gain", 0.0);

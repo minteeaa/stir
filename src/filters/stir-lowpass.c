@@ -81,8 +81,8 @@ void stir_lowpass_update(void* data, obs_data_t* settings) {
 	state->cutoff = (float)obs_data_get_double(settings, "lp_cutoff_freq");
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 	for (size_t ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
-		char key[12];
-		snprintf(key, sizeof(key), "lp_ch_%zu", ch);
+		char key[10];
+		snprintf(key, sizeof(key), "lp_ch_%zu", ch % 6u);
 		if (obs_data_get_bool(settings, key)) {
 			state->mask |= (1 << ch);
 		} else {
@@ -134,10 +134,10 @@ obs_properties_t *stir_lowpass_properties(void *data)
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *lowpass_channels = obs_properties_create();
 	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[17];
-		snprintf(id, sizeof(id), "lp_ch_%zu", k);
-		char desc[19];
-		snprintf(desc, sizeof(desc), "Channel %zu", k + 1);
+		char id[10];
+		snprintf(id, sizeof(id), "lp_ch_%zu", k % 6u);
+		char desc[12];
+		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 7u);
 		obs_properties_add_bool(lowpass_channels, id, desc);
 	}
 	obs_properties_add_group(props, "lowpass_channels", "Channels", OBS_GROUP_NORMAL, lowpass_channels);
@@ -152,8 +152,8 @@ obs_properties_t *stir_lowpass_properties(void *data)
 void stir_lowpass_defaults(obs_data_t *settings)
 {
 	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[17];
-		snprintf(id, sizeof(id), "lp_ch_%zu", k);
+		char id[10];
+		snprintf(id, sizeof(id), "lp_ch_%zu", k % 6u);
 		obs_data_set_default_bool(settings, id, false);
 	}
 	obs_data_set_default_double(settings, "lp_cutoff_freq", 100.0);
