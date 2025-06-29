@@ -14,7 +14,7 @@ struct channel_variables {
 
 struct tremolo_state {
 	obs_source_t *context;
-	
+
 	struct channel_variables channel_state[MAX_AUDIO_CHANNELS];
 	float rate;
 	float depth;
@@ -36,7 +36,8 @@ void stir_tremolo_destroy(void *data)
 	bfree(state);
 }
 
-void stir_tremolo_update(void* data, obs_data_t* settings) {
+void stir_tremolo_update(void *data, obs_data_t *settings)
+{
 	struct tremolo_state *state = data;
 	state->rate = (float)obs_data_get_double(settings, "tremolo_rate");
 	state->depth = (float)obs_data_get_double(settings, "tremolo_depth") * 0.01f;
@@ -61,7 +62,8 @@ void *stir_tremolo_create(obs_data_t *settings, obs_source_t *source)
 	return state;
 }
 
-float tremolo(struct tremolo_state *state, struct channel_variables *vars, float in) {
+float tremolo(struct tremolo_state *state, struct channel_variables *vars, float in)
+{
 	float out = 0.0f;
 	float tremolo_lfo = 1.0f + state->depth * sinf(2.0f * M_PI * vars->phase);
 	out = in * tremolo_lfo;
@@ -86,12 +88,14 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 	}
 }
 
-void stir_tremolo_add(void *data, obs_source_t *source) {
+void stir_tremolo_add(void *data, obs_source_t *source)
+{
 	struct tremolo_state *state = data;
 	stir_register_filter(source, "tremolo", state->context, process_audio, state);
 }
 
-void stir_tremolo_remove(void* data, obs_source_t *source) {
+void stir_tremolo_remove(void *data, obs_source_t *source)
+{
 	struct tremolo_state *state = data;
 	stir_unregister_filter(source, state->context);
 }
@@ -128,16 +132,14 @@ void stir_tremolo_defaults(obs_data_t *settings)
 	obs_data_set_default_double(settings, "tremolo_depth", 50.0);
 }
 
-struct obs_source_info stir_tremolo_info = {
-	.id = "stir_tremolo",
-	.type = OBS_SOURCE_TYPE_FILTER,
-	.output_flags = OBS_SOURCE_AUDIO,
-	.get_name = stir_tremolo_get_name,
-	.create = stir_tremolo_create,
-	.destroy = stir_tremolo_destroy,
-	.filter_add = stir_tremolo_add,
-	.filter_remove = stir_tremolo_remove,
-	.get_properties = stir_tremolo_properties,
-	.get_defaults = stir_tremolo_defaults,
-	.update = stir_tremolo_update
-};
+struct obs_source_info stir_tremolo_info = {.id = "stir_tremolo",
+					    .type = OBS_SOURCE_TYPE_FILTER,
+					    .output_flags = OBS_SOURCE_AUDIO,
+					    .get_name = stir_tremolo_get_name,
+					    .create = stir_tremolo_create,
+					    .destroy = stir_tremolo_destroy,
+					    .filter_add = stir_tremolo_add,
+					    .filter_remove = stir_tremolo_remove,
+					    .get_properties = stir_tremolo_properties,
+					    .get_defaults = stir_tremolo_defaults,
+					    .update = stir_tremolo_update};

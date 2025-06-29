@@ -26,7 +26,8 @@ void stir_gain_destroy(void *data)
 	bfree(state);
 }
 
-void stir_gain_update(void* data, obs_data_t* settings) {
+void stir_gain_update(void *data, obs_data_t *settings)
+{
 	struct gain_state *state = data;
 	state->gain = db_to_mul((float)obs_data_get_double(settings, "gain"));
 
@@ -75,7 +76,8 @@ void stir_gain_remove(void *data, obs_source_t *source)
 	stir_unregister_filter(source, state->context);
 }
 
-obs_properties_t* stir_gain_properties(void* data) {
+obs_properties_t *stir_gain_properties(void *data)
+{
 	UNUSED_PARAMETER(data);
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *gain_channels = obs_properties_create();
@@ -102,16 +104,14 @@ void stir_gain_defaults(obs_data_t *settings)
 	obs_data_set_default_double(settings, "gain", 0.0);
 }
 
-struct obs_source_info stir_gain_info = {
-	.id = "stir_gain",
-	.type = OBS_SOURCE_TYPE_FILTER,
-	.output_flags = OBS_SOURCE_AUDIO,
-	.get_name = stir_gain_get_name,
-	.create = stir_gain_create,
-	.destroy = stir_gain_destroy,
-	.filter_add = stir_gain_add,
-	.filter_remove = stir_gain_remove,
-	.get_properties = stir_gain_properties,
-	.get_defaults = stir_gain_defaults,
-	.update = stir_gain_update
-};
+struct obs_source_info stir_gain_info = {.id = "stir_gain",
+					 .type = OBS_SOURCE_TYPE_FILTER,
+					 .output_flags = OBS_SOURCE_AUDIO,
+					 .get_name = stir_gain_get_name,
+					 .create = stir_gain_create,
+					 .destroy = stir_gain_destroy,
+					 .filter_add = stir_gain_add,
+					 .filter_remove = stir_gain_remove,
+					 .get_properties = stir_gain_properties,
+					 .get_defaults = stir_gain_defaults,
+					 .update = stir_gain_update};

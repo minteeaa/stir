@@ -28,7 +28,8 @@ struct lowpass_state {
 	size_t channels;
 };
 
-void butterworth_calculate_lowpass(struct lowpass_state *state, struct channel_variables *vars) {
+void butterworth_calculate_lowpass(struct lowpass_state *state, struct channel_variables *vars)
+{
 	float omega_c = 2.0f * M_PI * (state->cutoff / state->sample_rate);
 	float alpha = sinf(omega_c) / (2 * sqrtf(2.0f));
 
@@ -50,10 +51,12 @@ void butterworth_calculate_lowpass(struct lowpass_state *state, struct channel_v
 	vars->a2 /= vars->a0;
 }
 
-float butterworth_lowpass(struct lowpass_state *state, struct channel_variables *vars, float in) {
+float butterworth_lowpass(struct lowpass_state *state, struct channel_variables *vars, float in)
+{
 	float out = 0.0f;
 
-	out = (vars->b0 * in + vars->b1 * vars->x1 + vars->b2 * vars->x2 - vars->a1 * vars->y1 - vars->a2 * vars->y2) * state->intensity;
+	out = (vars->b0 * in + vars->b1 * vars->x1 + vars->b2 * vars->x2 - vars->a1 * vars->y1 - vars->a2 * vars->y2) *
+	      state->intensity;
 
 	vars->x2 = vars->x1;
 	vars->x1 = in;
@@ -75,7 +78,8 @@ void stir_lowpass_destroy(void *data)
 	bfree(state);
 }
 
-void stir_lowpass_update(void* data, obs_data_t* settings) {
+void stir_lowpass_update(void *data, obs_data_t *settings)
+{
 	struct lowpass_state *state = data;
 	state->intensity = (float)obs_data_get_double(settings, "lp_intensity") * 0.01f;
 	state->cutoff = (float)obs_data_get_double(settings, "lp_cutoff_freq");
@@ -112,18 +116,21 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 		if (state->mask & (1 << i)) {
 			struct channel_variables *channel_vars = &state->channel_state[i];
 			for (size_t fr = 0; fr < samplect; ++fr) {
-				buf[i * samplect + fr] = butterworth_lowpass(state, channel_vars, buf[i * samplect + fr]);
+				buf[i * samplect + fr] =
+					butterworth_lowpass(state, channel_vars, buf[i * samplect + fr]);
 			}
 		}
 	}
 }
 
-void stir_lowpass_add(void *data, obs_source_t *source) {
+void stir_lowpass_add(void *data, obs_source_t *source)
+{
 	struct lowpass_state *state = data;
 	stir_register_filter(source, "lowpass", state->context, process_audio, state);
 }
 
-void stir_lowpass_remove(void* data, obs_source_t *source) {
+void stir_lowpass_remove(void *data, obs_source_t *source)
+{
 	struct lowpass_state *state = data;
 	stir_unregister_filter(source, state->context);
 }
@@ -160,16 +167,14 @@ void stir_lowpass_defaults(obs_data_t *settings)
 	obs_data_set_default_double(settings, "lp_intensity", 100.0);
 }
 
-struct obs_source_info stir_lowpass_info = {
-	.id = "stir_lowpass",
-	.type = OBS_SOURCE_TYPE_FILTER,
-	.output_flags = OBS_SOURCE_AUDIO,
-	.get_name = stir_lowpass_get_name,
-	.create = stir_lowpass_create,
-	.destroy = stir_lowpass_destroy,
-	.filter_add = stir_lowpass_add,
-	.filter_remove = stir_lowpass_remove,
-	.get_properties = stir_lowpass_properties,
-	.get_defaults = stir_lowpass_defaults,
-	.update = stir_lowpass_update
-};
+struct obs_source_info stir_lowpass_info = {.id = "stir_lowpass",
+					    .type = OBS_SOURCE_TYPE_FILTER,
+					    .output_flags = OBS_SOURCE_AUDIO,
+					    .get_name = stir_lowpass_get_name,
+					    .create = stir_lowpass_create,
+					    .destroy = stir_lowpass_destroy,
+					    .filter_add = stir_lowpass_add,
+					    .filter_remove = stir_lowpass_remove,
+					    .get_properties = stir_lowpass_properties,
+					    .get_defaults = stir_lowpass_defaults,
+					    .update = stir_lowpass_update};

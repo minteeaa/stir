@@ -124,8 +124,10 @@ void stir_router_destroy(void *data)
 		obs_source_release(stir_router->virtual_source);
 	}
 	stir_context_destroy(stir_router->buffer_context);
-	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name, stir_router);
-	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters", update_filter_chain, stir_router);
+	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name,
+				  stir_router);
+	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters",
+				  update_filter_chain, stir_router);
 	bfree(stir_router);
 }
 
@@ -141,7 +143,8 @@ void stir_router_add(void *data, obs_source_t *source)
 		obs_frontend_add_event_callback(callback_ready, stir_router);
 	}
 	signal_handler_connect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name, stir_router);
-	signal_handler_connect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters", update_filter_chain, stir_router);
+	signal_handler_connect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters",
+			       update_filter_chain, stir_router);
 }
 
 struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *audio)
@@ -188,8 +191,7 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 		.frames = sample_ct,
 		.format = AUDIO_FORMAT_FLOAT_PLANAR,
 		.samples_per_sec = audio_output_get_sample_rate(obs_get_audio()),
-		.timestamp = audio->timestamp
-	};
+		.timestamp = audio->timestamp};
 
 	for (size_t ch = 0; ch < channels; ch++) {
 		audio_o.data[ch] = (uint8_t *)(buffer + ch * sample_ct);
@@ -211,7 +213,8 @@ obs_properties_t *stir_router_properties(void *data)
 		snprintf(id, sizeof(id), "ch_src_%zu", k);
 		char desc[12];
 		snprintf(desc, sizeof(desc), "Channel %zu", k + 1);
-		chs[k] = obs_properties_add_list(channel_sources, id, desc, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+		chs[k] = obs_properties_add_list(channel_sources, id, desc, OBS_COMBO_TYPE_LIST,
+						 OBS_COMBO_FORMAT_STRING);
 		obs_property_list_add_string(chs[k], "Mono Left", "mono_left");
 		obs_property_list_add_string(chs[k], "Mono Right", "mono_right");
 		obs_property_list_add_string(chs[k], "Stereo Mix (L+R)", "stereo_mix");
