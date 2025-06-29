@@ -3,7 +3,10 @@
 #include <plugin-support.h>
 #include <string.h>
 
+#include "callback/calldata.h"
+#include "callback/signal.h"
 #include "media-io/audio-io.h"
+#include "obs.h"
 #include "util.h"
 #include "filters/stir-router.h"
 #include "stir-context.h"
@@ -52,6 +55,18 @@ void register_new_stir_source(void *private_data)
 	}
 	bfree(src_name);
 	obs_source_set_audio_mixers(stir_router->virtual_source, 0x1);
+}
+
+static void update_name(void *private_data, calldata_t *cd)
+{
+	struct stir_router_data *stir_router = private_data;
+	const char *new_name;
+	if (calldata_get_string(cd, "new_name", &new_name)) {
+		const char *s_pre = "stir_output_";
+		const char *s_suf = new_name;
+		char *src_name = concat(s_pre, s_suf);
+		obs_source_set_name(stir_router->virtual_source, src_name);
+	}
 }
 
 static void update_filter_chain(void *private_data, calldata_t *cd)
@@ -109,6 +124,7 @@ void stir_router_destroy(void *data)
 		obs_source_release(stir_router->virtual_source);
 	}
 	stir_context_destroy(stir_router->buffer_context);
+	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name, stir_router);
 	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters", update_filter_chain, stir_router);
 	bfree(stir_router);
 }
@@ -124,6 +140,7 @@ void stir_router_add(void *data, obs_source_t *source)
 	} else {
 		obs_frontend_add_event_callback(callback_ready, stir_router);
 	}
+	signal_handler_connect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name, stir_router);
 	signal_handler_connect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters", update_filter_chain, stir_router);
 }
 

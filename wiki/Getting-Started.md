@@ -16,6 +16,8 @@ in your OBS `Settings`, in the `Audio` tab, set `Channels` to `5.1` or higher.
 
 to apply a filter, right-click any 2-channel audio source and select `Filters`. add a filter denoted by the `STIR` prefix. all STIR filters are processed in their own, isolated chain separate from OBS' normal filter chain, and as such will ignore any other filters applied to the source.
 
+for STIR to process an audio source, a `STIR Router` filter must be present.
+
 to recieve output, add a new source to the scene of type `STIR Virtual Out`. when prompted, `Add Existing` and select the `stir_output_` prefixed source that matches the name of your original source.
 
 ```
