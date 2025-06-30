@@ -88,10 +88,10 @@ jobs:
             done
           done
 
-      - name: Generate Checksums 🪪
+      - name: Generate Checksums
         if: fromJSON(steps.check.outputs.validTag)
         run: |
-          : Generate Checksums 🪪
+          : Generate Checksums
           if [[ "${RUNNER_DEBUG}" ]]; then set -x; fi
           shopt -s extglob
 
@@ -100,7 +100,7 @@ jobs:
             echo "    ${file##*/}: $(sha256sum "${file}" | cut -d " " -f 1)" >> ${{ github.workspace }}/CHECKSUMS.txt
           done
 
-      - name: Create Release 🛫
+      - name: Create Release
         if: fromJSON(steps.check.outputs.validTag)
         id: create_release
         uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564

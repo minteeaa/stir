@@ -1,8 +1,17 @@
-STIR has no dedicated installer, the process is straightforward:
-* grab the latest [release](https://github.com/minteeaa/stir/releases) zip.
+STIR has no dedicated installer. installation is as follows.
+
+you'll need the latest [release](https://github.com/minteeaa/stir/releases) zip for your platform.
+> "rolling" releases can be found in the repo's [actions](https://github.com/minteeaa/stir/actions). bug reports will only be considered for stable releases.
+
+### windows
 * locate and open your OBS installation directory.
 * drag and drop (or extract) the `obs-plugins` folder from the release into the installation directory.
 > there might be an existing `obs-plugins/` directory present, this is normal.
+
+### linux
+obs' plugin directory varies based on user configuration and distro. on many distros, the default is `/usr/lib/obs-plugins/`
+* unzip the release.
+* either drag and drop `stir.so` using a file explorer, or `cp` the file into the plugin directory from the terminal. you may need root permissions.
 
 after installation, you can open OBS and there should be a handful of new filters to use on any audio source.
 

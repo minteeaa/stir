@@ -7,7 +7,7 @@ an LFO will oscillate the volume of an input audio stream at a consistent rate. 
 
 in audio, this is applied to a low-frequency audio stream to emulate physical vibrations of a subwoofer speaker and reflection from the surrounding environment.
 
-[hhspring's ffmpeg examples](https://hhsprings.bitbucket.io/docs/programming/examples/ffmpeg/manipulating_audio/tremolo.html) visually explains this through a video.
+[hhsprings' ffmpeg examples](https://hhsprings.bitbucket.io/docs/programming/examples/ffmpeg/manipulating_audio/tremolo.html) contains a visualization.
 
 ### config
 <sup>as of: 1.0.0</sup>
