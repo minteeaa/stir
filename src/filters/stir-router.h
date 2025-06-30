@@ -5,7 +5,6 @@
 
 const char *stir_router_get_name(void *data);
 const char *virtual_source_get_name(void *data);
-void register_new_stir_source(void *private_data);
 void callback_ready(enum obs_frontend_event event, void *private_data);
 void *stir_router_create(obs_data_t *settings, obs_source_t *source);
 void stir_router_destroy(void *data);

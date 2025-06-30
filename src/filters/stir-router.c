@@ -3,6 +3,7 @@
 #include <plugin-support.h>
 #include <string.h>
 
+#include "init.h"
 #include "callback/calldata.h"
 #include "callback/signal.h"
 #include "media-io/audio-io.h"
@@ -12,8 +13,6 @@
 #include "stir-context.h"
 #include "chain.h"
 #include "util/c99defs.h"
-
-bool front_loaded = false;
 
 struct stir_router_data {
 	obs_source_t *virtual_source;
@@ -41,10 +40,10 @@ const char *virtual_source_get_name(void *data)
 	return obs_module_text("STIR Virtual Out");
 }
 
-void register_new_stir_source(void *private_data)
+static void register_new_stir_source(void *private_data)
 {
 	struct stir_router_data *stir_router = private_data;
-	const char *s_pre = "stir_output_";
+	const char *s_pre = "STIR - ";
 	const char *s_suf = stir_router->parent_name;
 	char *src_name = concat(s_pre, s_suf);
 	obs_source_t *src = obs_get_source_by_name(src_name);
@@ -62,10 +61,11 @@ static void update_name(void *private_data, calldata_t *cd)
 	struct stir_router_data *stir_router = private_data;
 	const char *new_name;
 	if (calldata_get_string(cd, "new_name", &new_name)) {
-		const char *s_pre = "stir_output_";
+		const char *s_pre = "STIR - ";
 		const char *s_suf = new_name;
 		char *src_name = concat(s_pre, s_suf);
 		obs_source_set_name(stir_router->virtual_source, src_name);
+		bfree(src_name);
 	}
 }
 
@@ -74,15 +74,6 @@ static void update_filter_chain(void *private_data, calldata_t *cd)
 	UNUSED_PARAMETER(cd);
 	struct stir_router_data *stir_router = private_data;
 	update_stir_filter_order(stir_router->parent);
-}
-
-void callback_ready(enum obs_frontend_event event, void *private_data)
-{
-	struct stir_router_data *stir_router = private_data;
-	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
-		front_loaded = true;
-		register_new_stir_source(stir_router);
-	}
 }
 
 void stir_router_update(void *data, obs_data_t *settings)
@@ -111,7 +102,6 @@ void *stir_router_create(obs_data_t *settings, obs_source_t *source)
 	stir_router->channels = audio_output_get_channels(obs_get_audio());
 	stir_router->context = source;
 	stir_router->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-	obs_frontend_add_event_callback(callback_ready, stir_router);
 	stir_router_update(stir_router, settings);
 	return stir_router;
 }
@@ -137,11 +127,12 @@ void stir_router_add(void *data, obs_source_t *source)
 	stir_router->parent = source;
 	stir_router->parent_name = obs_source_get_name(source);
 
-	if (front_loaded == true) {
+	if (front_init == 1) {
 		register_new_stir_source(stir_router);
 	} else {
-		obs_frontend_add_event_callback(callback_ready, stir_router);
+		register_front_ready_cb(register_new_stir_source, stir_router, stir_router);
 	}
+
 	signal_handler_connect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name, stir_router);
 	signal_handler_connect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters",
 			       update_filter_chain, stir_router);
@@ -228,7 +219,12 @@ void stir_router_defaults(obs_data_t *settings)
 	for (size_t k = 0; k < MAX_AUDIO_CHANNELS; ++k) {
 		char id[12];
 		snprintf(id, sizeof(id), "ch_src_%zu", k);
-		obs_data_set_default_string(settings, id, "stereo_mix");
+		if (k == 0)
+			obs_data_set_default_string(settings, id, "mono_left");
+		else if (k == 1)
+			obs_data_set_default_string(settings, id, "mono_right");
+		else
+			obs_data_set_default_string(settings, id, "stereo_mix");
 	}
 }
 
