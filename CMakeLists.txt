@@ -34,8 +34,9 @@ if(ENABLE_QT)
   )
 endif()
 
-target_sources(${CMAKE_PROJECT_NAME} 
-    PRIVATE 
+target_sources(
+  ${CMAKE_PROJECT_NAME}
+  PRIVATE
     src/filters/stir-gain.c
     src/filters/stir-gain.h
     src/filters/stir-lowpass.c
