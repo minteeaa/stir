@@ -19,13 +19,13 @@ relocate the speakers, experiment and find a setup that works for you!
 the preset audio sources can be changed to accomodate any setup. by default, the intended channel configuration for this preset is:
 
 
-| channel   | response          | AVPro mode   |
-|-----------|-------------------|--------------|
-| 0         | `left [mono]`     | `Mono Left`  |
-| 1         | `right [mono]`    | `Mono Right` |
-| 2         | `mids (bandpass)` | `Three`      |
-| 3         | `unused`          | `Four`       |
-| 4         | `lowpass`         | `Five`       |
-| 5         | `highpass`        | `Six`        |
+| OBS channel | response          | AVPro mode   |
+|-------------|-------------------|--------------|
+| 1           | `left [mono]`     | `Mono Left`  |
+| 2           | `right [mono]`    | `Mono Right` |
+| 3           | `mids (bandpass)` | `Three`      |
+| 4           | `unused`          | `Four`       |
+| 5           | `lowpass`         | `Five`       |
+| 6           | `highpass`        | `Six`        |
 
-`bandpass` is a mixture of `lowpass` and `highpass` to isolate a range of frequencies.
+`bandpass` is a mixture of `lowpass` and `highpass` filters to isolate a range of frequencies.
