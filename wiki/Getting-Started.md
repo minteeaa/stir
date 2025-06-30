@@ -21,7 +21,7 @@ you may want to create a separate OBS profile for STIR. in your OBS `Settings`, 
 
 ### applying filters
 
-to apply a filter, right-click any 2-channel audio source and select `Filters`. add a filter denoted by the `STIR` prefix. all STIR filters are processed in their own, isolated chain separate from OBS' normal filter chain, and as such will ignore any other filters applied to the source.
+to apply a filter, right-click any 2-channel audio source and select `Filters`. add a filter denoted by the `STIR` prefix. all STIR filters are processed in their own, isolated chain separate from OBS' normal filter chain, and as such will ignore any other filters applied to the source. 
 
 for STIR to process an audio source, a `STIR Router` filter must be present.
 
@@ -35,3 +35,4 @@ the order of the filters does affect the final output, with the exception of the
 
 any filter can affect a specific channel, selectable via the toggle boxes within the `Channels` section of each filter's UI.
 
+editing the STIR generated source is generally discouraged. standard OBS filters (for example, a limiter) can be applied without issue, but applying STIR filters to a STIR Virtual Out source is not supported and may result in unintended behavior.

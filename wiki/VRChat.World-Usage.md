@@ -13,15 +13,15 @@ AVPro's channel layout is as follows:
 
 | channel |  AVPro mode  |
 |---------|--------------|
-| 0       | `Mono Left`  |
-| 1       | `Mono Right` |
-| 2       | `Three`      |
-| 3       | `Four`       |
-| 4       | `Five`       |
-| 5       | `Six`        |
+| 1       | `Mono Left`  |
+| 2       | `Mono Right` |
+| 3       | `Three`      |
+| 4       | `Four`       |
+| 5       | `Five`       |
+| 6       | `Six`        |
 
 ### important notes
 
-* the `Stereo Mix` AVPro mode is a mix of channels `0` and `1` and cannot be edited manually.
-* channel `3` is affected during runtime by AVPro applying its own in-built lowpass filter; it has been tested but it sounds like bass played through a glass of water. your mileage may vary.
+* the `Stereo Mix` AVPro mode is a mix of channels `1` and `2` and cannot be edited manually.
+* channel `4` is affected during runtime by AVPro applying its own in-built lowpass filter; it has been tested but it sounds like bass played through a glass of water. your mileage may vary.
 * 8-channel audio is *technically* supported as AVPro does expose two extra channels; this may become a feature in the future but currently is limited by decoder support.
