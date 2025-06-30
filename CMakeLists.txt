@@ -47,6 +47,7 @@ target_sources(${CMAKE_PROJECT_NAME}
     src/filters/stir-tremolo.c
     src/filters/stir-tremolo.h
     src/init.c
+    src/init.h
     src/chain.c
     src/chain.h
     src/stir-context.c
