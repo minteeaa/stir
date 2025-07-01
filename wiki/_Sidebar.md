@@ -13,3 +13,4 @@
 * [ProTV Preset](./VRChat.ProTV-Preset.md)
 * [Steam Audio](./VRChat.Steam-Audio.md)
 * [Testing Worlds](./VRChat.Testing-Worlds.md)
+* [CDNs](./VRChat.CDNs.md)
