@@ -7,6 +7,7 @@
 * [Lowpass](./Filters.Lowpass.md)
 * [Highpass](./Filters.Highpass.md)
 * [Tremolo](./Filters.Tremolo.md)
+* [Echo](./Filters.Echo.md)
 
 ## VRChat
 * [World Usage](./VRChat.World-Usage.md)
