@@ -24,7 +24,7 @@ float lerp(float a, float b, float t)
 	return a + (b - a) * t;
 }
 
-float lerpexp(float a, float b, float c)
+float interpexp(float a, float b, float c)
 {
 	return a * c + b * (1.0f - c);
 }

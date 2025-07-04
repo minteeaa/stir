@@ -95,7 +95,7 @@ void *stir_echo_create(obs_data_t *settings, obs_source_t *source)
 float echo(float in, struct channel_variables *ch, struct echo_state *state)
 {
 	float out = 0.0f;
-	state->delay_smoothed = lerpexp(state->delay_smoothed, state->delay_target, SMOOTHING_COEFFICIENT);
+	state->delay_smoothed = interpexp(state->delay_smoothed, state->delay_target, SMOOTHING_COEFFICIENT);
 
 	if (fabsf(state->delay_smoothed - state->delay_target) < 20.0f) {
 		state->delay_current = state->delay_target;
