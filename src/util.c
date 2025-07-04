@@ -18,3 +18,13 @@ char *concat(const char *str1, const char *str2)
 	strcat(result, str2);
 	return result;
 }
+
+float lerp(float a, float b, float t)
+{
+	return a + (b - a) * t;
+}
+
+float lerpexp(float a, float b, float c)
+{
+	return a * c + b * (1.0f - c);
+}
