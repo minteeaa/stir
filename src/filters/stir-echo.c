@@ -53,12 +53,12 @@ void stir_echo_destroy(void *data)
 void stir_echo_update(void *data, obs_data_t *settings)
 {
 	struct echo_state *state = data;
-	float user_delay = obs_data_get_double(settings, "echo-delay");
+	float user_delay = (float)obs_data_get_double(settings, "echo-delay");
 	float sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 	state->delay_target = (user_delay * sample_rate) / 1000.0f;
-	state->decay = obs_data_get_double(settings, "echo-decay");
-	state->wet_mix = obs_data_get_double(settings, "echo-wet-mix");
-	state->dry_mix = obs_data_get_double(settings, "echo-dry-mix");
+	state->decay = (float)obs_data_get_double(settings, "echo-decay");
+	state->wet_mix = (float)obs_data_get_double(settings, "echo-wet-mix");
+	state->dry_mix = (float)obs_data_get_double(settings, "echo-dry-mix");
 	for (size_t ch = 0; ch < state->channels; ++ch) {
 		char key[12];
 		struct channel_variables *chs = &state->channel_state[ch];
