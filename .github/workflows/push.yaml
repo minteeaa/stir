@@ -2,8 +2,8 @@ name: Push
 run-name: ${{ github.ref_name }} push run
 on:
   push:
-    paths:
-      - "!wiki/**"
+    paths-ignore:
+      - "wiki/**"
     branches:
       - master
       - main
