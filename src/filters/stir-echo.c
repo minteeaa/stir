@@ -4,6 +4,7 @@
 #include <media-io/audio-math.h>
 
 #include "media-io/audio-io.h"
+#include "obs-properties.h"
 #include "obs.h"
 #include "stir-context.h"
 #include "chain.h"
@@ -153,10 +154,12 @@ obs_properties_t *stir_echo_properties(void *data)
 	obs_properties_add_group(props, "echo_channels", "Channels", OBS_GROUP_NORMAL, gain_channels);
 	obs_property_t *p = obs_properties_add_float_slider(props, "echo-delay", "Delay", 50.0, 5000.0, 1.0);
 	obs_property_float_set_suffix(p, " ms");
-	obs_property_t *f = obs_properties_add_float_slider(props, "echo-decay", "Decay Ratio", 0.0, 1.0, 0.1);
-	obs_property_float_set_suffix(f, " x");
-	obs_properties_add_float_slider(props, "echo-wet-mix", "Wet Mix", 0.0, 1.0, 0.01);
-	obs_properties_add_float_slider(props, "echo-dry-mix", "Dry Mix", 0.0, 1.0, 0.01);
+	obs_property_t *f = obs_properties_add_float_slider(props, "echo-decay", "Decay Ratio", 0.0, 1.0, 0.01);
+	obs_property_float_set_suffix(f, "x");
+	obs_property_t *wm = obs_properties_add_float_slider(props, "echo-wet-mix", "Wet Mix", 0.0, 1.0, 0.01);
+	obs_property_float_set_suffix(wm, "x");
+	obs_property_t *dm = obs_properties_add_float_slider(props, "echo-dry-mix", "Dry Mix", 0.0, 1.0, 0.01);
+	obs_property_float_set_suffix(dm, "x");
 	return props;
 }
 
