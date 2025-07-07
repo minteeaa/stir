@@ -3,6 +3,7 @@
 <p align="center">
   <a title="OBS30+" href="https://obsproject.com/"><img src="https://img.shields.io/badge/OBS-30.0.0+-blue?style=flat-square" alt="OBS 30.0.0+"></a>
   <a title="GPL2" href="https://www.gnu.org/licenses/old-licenses/gpl-2.0"><img src="https://img.shields.io/github/license/minteeaa/stir?style=flat-square" alt="GPL 2.0"></a>
+  <a title="Build" href="https://github.com/minteeaa/stir/actions"><img src="https://img.shields.io/github/actions/workflow/status/minteeaa/stir/push.yaml?style=flat-square" alt="Build Status"></a>
 </p>
 
 ---
