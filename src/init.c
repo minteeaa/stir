@@ -5,6 +5,7 @@
 
 #include "init.h"
 #include "ext/uthash.h"
+#include "filters/stir-echo.h"
 #include "filters/stir-router.h"
 #include "filters/stir-lowpass.h"
 #include "filters/stir-gain.h"
@@ -75,6 +76,8 @@ bool obs_module_load(void)
 	obs_log(LOG_INFO, "Tremolo: registered filter");
 	obs_register_source(&stir_highpass_info);
 	obs_log(LOG_INFO, "Highpass: registered filter");
+	obs_register_source(&stir_echo_info);
+	obs_log(LOG_INFO, "Echo: registered filter");
 	obs_log(LOG_INFO, "STIR modules loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }
