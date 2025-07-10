@@ -13,9 +13,7 @@
 
 STIR aims to be an easy-to-approach solution for virtual upmixing of 2-channel sources and applying filters onto their individual channels.
 
-the primary fix this attempts to present is for VRChat's [ongoing lack of audio filter support](https://feedback.vrchat.com/sdk-bug-reports/p/proposal-for-fixing-audio-filters-eg-low-pass-support-for-avpro).
-
-STIR started off as a server-hosted audio upmixer that applied simple audio filters separating the lows, mids, and highs of a stereo input and returned those in a channel setup usable within vrchat; it is now an OBS plugin with an expandable feature set.
+the inspiration for this project comes from VRChat's [ongoing lack of audio filter support](https://feedback.vrchat.com/sdk-bug-reports/p/proposal-for-fixing-audio-filters-eg-low-pass-support-for-avpro), and can be expanded to any valid usage case within OBS.
 
 ### usage
 *the info, the guide*
