@@ -148,9 +148,6 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 	if (sample_ct == 0) {
 		return audio;
 	}
-	if (channels < 6) {
-		return audio;
-	}
 
 	float **audio_data = (float **)audio->data;
 	float *buffer = stir_get_buf(ctx);
@@ -177,12 +174,11 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 
 	stir_process_filters(stir_router->parent, ctx, sample_ct);
 
-	struct obs_source_audio audio_o = {
-		.speakers = audio_output_get_channels(obs_get_audio()) > 6 ? SPEAKERS_7POINT1 : SPEAKERS_5POINT1,
-		.frames = sample_ct,
-		.format = AUDIO_FORMAT_FLOAT_PLANAR,
-		.samples_per_sec = audio_output_get_sample_rate(obs_get_audio()),
-		.timestamp = audio->timestamp};
+	struct obs_source_audio audio_o = {.speakers = channels,
+					   .frames = sample_ct,
+					   .format = AUDIO_FORMAT_FLOAT_PLANAR,
+					   .samples_per_sec = audio_output_get_sample_rate(obs_get_audio()),
+					   .timestamp = audio->timestamp};
 
 	for (size_t ch = 0; ch < channels; ch++) {
 		audio_o.data[ch] = (uint8_t *)(buffer + ch * sample_ct);
