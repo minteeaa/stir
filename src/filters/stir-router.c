@@ -145,9 +145,11 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 	const uint32_t sample_ct = audio->frames;
 	stir_context_t *ctx = stir_router->buffer_context;
 
-	if (sample_ct == 0) {
+	if (sample_ct == 0)
 		return audio;
-	}
+
+	if (channels < 2)
+		return audio;
 
 	float **audio_data = (float **)audio->data;
 	float *buffer = stir_get_buf(ctx);
