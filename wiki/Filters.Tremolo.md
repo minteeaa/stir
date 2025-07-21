@@ -10,8 +10,12 @@ in audio, this is applied to a low-frequency audio stream to emulate physical vi
 [hhsprings' ffmpeg examples](https://hhsprings.bitbucket.io/docs/programming/examples/ffmpeg/manipulating_audio/tremolo.html) contains a visualization.
 
 ### config
-<sup>as of: 1.0.0</sup>
+<sup>as of: 1.2.0</sup>
 
 `rate` controls the speed at which oscillation occurs. higher values oscillate faster.
 
 `depth` controls the intensity of the volume modulation from the oscillation. the volume of the input audio will be reduced during oscillation by a maximum defined by this value.
+
+`Wet Mix` controls the intensity of the tremolo signal to be mixed into the output.
+
+`Dry Mix` controls the intensity of the original signal to be mixed into the output.

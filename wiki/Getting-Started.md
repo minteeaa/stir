@@ -17,7 +17,7 @@ after installation, you can open OBS and there should be a handful of new filter
 
 ### prerequisites
 
-you may want to create a separate OBS profile for STIR. in your OBS `Settings`, in the `Audio` tab, set `Channels` to `5.1` or higher. 
+you may want to create a separate OBS profile for STIR. in your OBS `Settings`, in the `Audio` tab, set `Channels` to `Stereo` or higher. STIR supports anything above 1 channel (mono) audio.
 
 ### applying filters
 
