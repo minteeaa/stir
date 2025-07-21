@@ -6,7 +6,7 @@ the STIR Lowpass filter applies a 2nd-order Butterworth lowpass filter to the ch
 ### config
 <sup>as of: 1.2.0</sup>
 
-`cutoff` controls the cutoff frequency. frequencies below this value will be audible.
+`Cutoff` controls the cutoff frequency. frequencies below this value will be audible.
 
 `Q` controls the Q factor of the Butterworth formula, calculating the alpha based off of this value. this value most closely relates to the "smoothness" of the falloff at the desired frequency. lower values will make the cutoff "sharper" while higher values will be "smoother."
 
