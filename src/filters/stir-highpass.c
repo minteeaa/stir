@@ -18,7 +18,7 @@ struct channel_variables {
 struct highpass_state {
 	obs_source_t *context;
 
-	float cutoff;
+	float cutoff, q;
 	float wetmix, drymix;
 
 	struct channel_variables channel_state[MAX_AUDIO_CHANNELS];
@@ -31,7 +31,7 @@ struct highpass_state {
 void butterworth_calculate_highpass(struct highpass_state *state, struct channel_variables *vars)
 {
 	float omega_c = 2.0f * M_PI * (state->cutoff / state->sample_rate);
-	float alpha = sinf(omega_c) / (2 * sqrtf(2.0f));
+	float alpha = sinf(omega_c) / (2.0f * state->q);
 
 	float cos_omega_c = cosf(omega_c);
 
@@ -84,6 +84,7 @@ void stir_highpass_update(void *data, obs_data_t *settings)
 	struct highpass_state *state = data;
 	state->wetmix = (float)obs_data_get_double(settings, "hp_wet_mix");
 	state->drymix = (float)obs_data_get_double(settings, "hp_dry_mix");
+	state->q = (float)obs_data_get_double(settings, "hp_q");
 	state->cutoff = (float)obs_data_get_double(settings, "hp_cutoff_freq");
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 	for (size_t ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
@@ -153,6 +154,8 @@ obs_properties_t *stir_highpass_properties(void *data)
 
 	obs_property_t *cf = obs_properties_add_float_slider(props, "hp_cutoff_freq", "Cutoff", 100.0, 2500.0, 1.0);
 	obs_property_float_set_suffix(cf, " Hz");
+	obs_property_t *q = obs_properties_add_float_slider(props, "hp_q", "Q", 0.5, 2.0, 0.01);
+	obs_property_float_set_suffix(q, "x");
 	obs_property_t *wm = obs_properties_add_float_slider(props, "hp_wet_mix", "Wet Mix", 0.0, 1.0, 0.01);
 	obs_property_float_set_suffix(wm, "x");
 	obs_property_t *dm = obs_properties_add_float_slider(props, "hp_dry_mix", "Dry Mix", 0.0, 1.0, 0.01);
@@ -168,7 +171,7 @@ void stir_highpass_defaults(obs_data_t *settings)
 		obs_data_set_default_bool(settings, id, false);
 	}
 	obs_data_set_default_double(settings, "hp_cutoff_freq", 2000.0);
-	obs_data_set_default_double(settings, "hp_intensity", 100.0);
+	obs_data_set_default_double(settings, "hp_q", 0.70);
 	obs_data_set_default_double(settings, "hp_wet_mix", 1.0);
 	obs_data_set_default_double(settings, "hp_dry_mix", 0.0);
 }
