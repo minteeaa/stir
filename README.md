@@ -4,6 +4,9 @@
   <a title="OBS30+" href="https://obsproject.com/"><img src="https://img.shields.io/badge/OBS-30.0.0+-blue?style=flat-square" alt="OBS 30.0.0+"></a>
   <a title="GPL2" href="https://www.gnu.org/licenses/old-licenses/gpl-2.0"><img src="https://img.shields.io/github/license/minteeaa/stir?style=flat-square" alt="GPL 2.0"></a>
   <a title="Build" href="https://github.com/minteeaa/stir/actions"><img src="https://img.shields.io/github/actions/workflow/status/minteeaa/stir/push.yaml?style=flat-square" alt="Build Status"></a>
+  <br>
+  <a title="Codeberg" href="https://codeberg.org/mintea/stir"><img src="https://img.shields.io/badge/on-codeberg-blue?style=flat-square&logo=codeberg" alt="Codeberg @ mintea/stir"></a>
+  <a title="Github" href="https://github.com/minteeaa/stir"><img src="https://img.shields.io/badge/on-github-black?style=flat-square&logo=github" alt="Github @ mintea/stir"></a>
 </p>
 
 ---
