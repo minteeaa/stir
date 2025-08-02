@@ -18,6 +18,7 @@ struct tremolo_state {
 	struct channel_variables channel_state[MAX_AUDIO_CHANNELS];
 	float rate;
 	float depth;
+	float wetmix, drymix;
 
 	float sample_rate;
 	uint8_t mask;
@@ -41,6 +42,8 @@ void stir_tremolo_update(void *data, obs_data_t *settings)
 	struct tremolo_state *state = data;
 	state->rate = (float)obs_data_get_double(settings, "tremolo_rate");
 	state->depth = (float)obs_data_get_double(settings, "tremolo_depth") * 0.01f;
+	state->wetmix = (float)obs_data_get_double(settings, "tremolo_wet_mix");
+	state->drymix = (float)obs_data_get_double(settings, "tremolo_dry_mix");
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 	for (size_t ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
 		char key[11];
@@ -66,7 +69,8 @@ float tremolo(struct tremolo_state *state, struct channel_variables *vars, float
 {
 	float out = 0.0f;
 	float tremolo_lfo = 1.0f + state->depth * sinf(2.0f * M_PI * vars->phase);
-	out = in * tremolo_lfo;
+	float wet = in * tremolo_lfo;
+	out = (in * state->drymix) + (wet * state->wetmix);
 
 	vars->phase += state->rate / state->sample_rate;
 	if (vars->phase >= 1.0f)
@@ -118,6 +122,10 @@ obs_properties_t *stir_tremolo_properties(void *data)
 	obs_property_t *d = obs_properties_add_float_slider(props, "tremolo_depth", "Depth", 0.0, 100.0, 0.5);
 	obs_property_float_set_suffix(r, " Hz");
 	obs_property_float_set_suffix(d, "%");
+	obs_property_t *wm = obs_properties_add_float_slider(props, "tremolo_wet_mix", "Wet Mix", 0.0, 1.0, 0.01);
+	obs_property_float_set_suffix(wm, "x");
+	obs_property_t *dm = obs_properties_add_float_slider(props, "tremolo_dry_mix", "Dry Mix", 0.0, 1.0, 0.01);
+	obs_property_float_set_suffix(dm, "x");
 	return props;
 }
 
@@ -130,6 +138,8 @@ void stir_tremolo_defaults(obs_data_t *settings)
 	}
 	obs_data_set_default_double(settings, "tremolo_rate", 4.0);
 	obs_data_set_default_double(settings, "tremolo_depth", 50.0);
+	obs_data_set_default_double(settings, "tremolo_wet_mix", 1.0);
+	obs_data_set_default_double(settings, "tremolo_dry_mix", 0.0);
 }
 
 struct obs_source_info stir_tremolo_info = {.id = "stir_tremolo",
