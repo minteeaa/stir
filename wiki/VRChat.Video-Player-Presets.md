@@ -1,5 +1,5 @@
 > [!NOTE]
-> the latest versions of the preset UnityPackages can be found [here](https://github.com/minteeaa/stir/tree/master/meta/packages)
+> the latest versions of the preset UnityPackages can be found [here](https://codeberg.org/mintea/stir/src/branch/master/meta/packages)
 
 ### VideoTXL
 - locate the prefab in `/Assets/mintea/STIR/VideoTXL`.

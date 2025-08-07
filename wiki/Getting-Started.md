@@ -1,7 +1,7 @@
 STIR has no dedicated installer. installation is as follows.
 
-you'll need the latest [release](https://github.com/minteeaa/stir/releases) zip for your platform.
-> "rolling" releases can be found in the repo's [actions](https://github.com/minteeaa/stir/actions). bug reports will only be considered for stable and beta (rc) releases.
+you'll need the latest [release](https://codeberg.org/mintea/stir/releases) zip for your platform.
+> "rolling" releases can be found in the github repo's [actions](https://github.com/minteeaa/stir/actions). bug reports will only be considered for stable and beta (rc) releases.
 
 ### windows
 * locate and open your OBS installation directory.
