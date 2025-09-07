@@ -14,6 +14,7 @@ stir_context_t *stir_context_create(void)
 void stir_context_destroy(stir_context_t *ctx)
 {
 	bfree(ctx->buffer);
+	bfree(ctx->ms_buffer);
 	bfree(ctx);
 }
 
