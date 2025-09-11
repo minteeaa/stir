@@ -11,6 +11,9 @@
 
 ---
 
+> [!NOTE]
+> the GitHub repository is a **mirror** of the primary repository on [Codeberg](https://codeberg.org/mintea/stir), and is subject to inconsistencies at any given time.
+
 ### what is this
 *audio filter/upmixer designed for many channels*
 
