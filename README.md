@@ -24,7 +24,7 @@ the primary inspiration for this project comes from VRChat's [ongoing lack of au
 ### usage
 *the info, the guide*
 
-refer to the [wiki](https://github.com/minteeaa/stir/wiki) for setup and usage.
+refer to the [wiki](https://codeberg.org/mintea/stir/wiki) for setup and usage.
 
 ### supported environments
 *versions n' stuff*
