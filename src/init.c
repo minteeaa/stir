@@ -64,11 +64,14 @@ void front_ready_cb(enum obs_frontend_event event, void *private_data)
 void scene_change_cb(enum obs_frontend_event event, void *private_data)
 {
 	UNUSED_PARAMETER(private_data);
-	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING) {
+	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP) {
+		obs_log(LOG_INFO, "scene changing");
 		scene_changing = 1;
 	}
 
-	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED) {
+	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED ||
+	    event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_RENAMED) {
+		obs_log(LOG_INFO, "scene changed");
 		scene_changing = 0;
 	}
 }
