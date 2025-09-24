@@ -41,3 +41,9 @@ refer to the [wiki](https://codeberg.org/mintea/stir/wiki) for setup and usage.
 | macOS       | unsupported |
 
 > linux has been tested and confirmed to work on Arch Linux. other distros *should* be supported by default. there are no current plans to support macOS.
+
+### credits
+*friends who contributed directly and indirectly to this project*
+
+Crunchy Joints, for constantly pushing STIR to its limits, most of the early/ongoing bughunting and testing efforts, and being an incredible second brain to spin up new ideas.
+Llamahat, for the initial idea of turning this concept into an OBS plugin.
