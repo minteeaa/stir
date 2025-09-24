@@ -45,5 +45,6 @@ refer to the [wiki](https://codeberg.org/mintea/stir/wiki) for setup and usage.
 ### credits
 *friends who contributed directly and indirectly to this project*
 
-Crunchy Joints, for constantly pushing STIR to its limits, most of the early/ongoing bughunting and testing efforts, and being an incredible second brain to spin up new ideas.
-Llamahat, for the initial idea of turning this concept into an OBS plugin.
+**Crunchy Joints**, for constantly pushing STIR to its limits, most of the early/ongoing bughunting and testing efforts, and being an incredible second brain to spin up new ideas.
+
+**Llamahat**, for the initial idea of turning this concept into an OBS plugin.
