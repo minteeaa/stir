@@ -12,6 +12,7 @@
 #include "filters/stir-router.h"
 #include "stir-context.h"
 #include "chain.h"
+#include "util/base.h"
 #include "util/c99defs.h"
 
 struct stir_router_data {
@@ -40,20 +41,26 @@ const char *virtual_source_get_name(void *data)
 	return obs_module_text("STIR Virtual Out");
 }
 
-static void register_new_stir_source(void *private_data)
+static void update_stir_source(void *private_data)
 {
 	struct stir_router_data *stir_router = private_data;
-	const char *s_pre = "STIR - ";
-	const char *s_suf = stir_router->parent_name;
-	char *src_name = concat(s_pre, s_suf);
-	obs_source_t *src = obs_get_source_by_name(src_name);
-	if (src != NULL) {
-		stir_router->virtual_source = src;
-	} else {
-		stir_router->virtual_source = obs_source_create("stir_virtual_out", src_name, NULL, NULL);
+	if (stir_router->virtual_source == NULL) {
+		const char *s_pre = "STIR - ";
+		const char *s_suf = stir_router->parent_name;
+		char *src_name = concat(s_pre, s_suf);
+		obs_source_t *src = obs_get_source_by_name(src_name);
+		if (src != NULL) {
+			stir_router->virtual_source = src;
+			obs_source_release(src);
+			obs_log(LOG_INFO, "found src");
+		} else {
+			stir_router->virtual_source = obs_source_create("stir_virtual_out", src_name, NULL, NULL);
+			obs_log(LOG_INFO, "new src");
+		}
+		obs_log(LOG_INFO, "src set");
+		bfree(src_name);
+		obs_source_set_audio_mixers(stir_router->virtual_source, 0x1);
 	}
-	bfree(src_name);
-	obs_source_set_audio_mixers(stir_router->virtual_source, 0x1);
 }
 
 static void update_name(void *private_data, calldata_t *cd)
@@ -98,7 +105,8 @@ void stir_router_scene_change_cb(enum obs_frontend_event event, void *private_da
 {
 	struct stir_router_data *stir_router = private_data;
 	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED) {
-		register_new_stir_source(stir_router);
+		obs_log(LOG_INFO, "router scene changed");
+		update_stir_source(stir_router);
 	}
 }
 
@@ -116,12 +124,14 @@ void *stir_router_create(obs_data_t *settings, obs_source_t *source)
 
 void stir_router_destroy(void *data)
 {
+	obs_log(LOG_INFO, "destruct data");
 	struct stir_router_data *stir_router = data;
 	if (stir_router->virtual_source) {
-		obs_source_remove(stir_router->virtual_source);
 		obs_source_release(stir_router->virtual_source);
+		obs_log(LOG_INFO, "remove source");
 	}
 	stir_context_destroy(stir_router->buffer_context);
+	obs_frontend_remove_event_callback(stir_router_scene_change_cb, stir_router);
 	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name,
 				  stir_router);
 	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters",
@@ -137,12 +147,14 @@ void stir_router_add(void *data, obs_source_t *source)
 
 	if (front_init == 1) {
 		if (scene_changing == 0) {
-			register_new_stir_source(stir_router);
+			update_stir_source(stir_router);
+			obs_log(LOG_INFO, "ch0");
 		} else {
 			obs_frontend_add_event_callback(stir_router_scene_change_cb, stir_router);
+			obs_log(LOG_INFO, "ch1");
 		}
 	} else {
-		register_front_ready_cb(register_new_stir_source, stir_router, stir_router);
+		register_front_ready_cb(update_stir_source, stir_router, stir_router);
 	}
 
 	signal_handler_connect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name, stir_router);
@@ -238,24 +250,20 @@ void stir_router_defaults(obs_data_t *settings)
 	}
 }
 
-struct obs_source_info stir_router_info = {
-	.id = "stir_router",
-	.type = OBS_SOURCE_TYPE_FILTER,
-	.output_flags = OBS_SOURCE_AUDIO,
-	.get_name = stir_router_get_name,
-	.create = stir_router_create,
-	.get_defaults = stir_router_defaults,
-	.destroy = stir_router_destroy,
-	.update = stir_router_update,
-	.filter_audio = stir_router_process,
-	.get_properties = stir_router_properties,
-	.filter_add = stir_router_add,
-};
+struct obs_source_info stir_router_info = {.id = "stir_router",
+					   .type = OBS_SOURCE_TYPE_FILTER,
+					   .output_flags = OBS_SOURCE_AUDIO,
+					   .get_name = stir_router_get_name,
+					   .create = stir_router_create,
+					   .get_defaults = stir_router_defaults,
+					   .destroy = stir_router_destroy,
+					   .update = stir_router_update,
+					   .filter_audio = stir_router_process,
+					   .get_properties = stir_router_properties,
+					   .filter_add = stir_router_add};
 
-struct obs_source_info virtual_audio_info = {
-	.id = "stir_virtual_out",
-	.type = OBS_SOURCE_TYPE_INPUT,
-	.output_flags = OBS_SOURCE_AUDIO,
-	.get_name = virtual_source_get_name,
-	.icon_type = OBS_ICON_TYPE_AUDIO_OUTPUT,
-};
+struct obs_source_info virtual_audio_info = {.id = "stir_virtual_out",
+					     .type = OBS_SOURCE_TYPE_INPUT,
+					     .output_flags = OBS_SOURCE_AUDIO,
+					     .get_name = virtual_source_get_name,
+					     .icon_type = OBS_ICON_TYPE_AUDIO_OUTPUT};
