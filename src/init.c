@@ -26,6 +26,7 @@ struct init_cb_c {
 };
 
 uint8_t front_init = 0;
+uint8_t scene_changing = 0;
 static struct init_cb_c *init_chain = NULL;
 
 void register_front_ready_cb(init_cb cb, void *ptr, void *userdata)
@@ -60,9 +61,22 @@ void front_ready_cb(enum obs_frontend_event event, void *private_data)
 	}
 }
 
+void scene_change_cb(enum obs_frontend_event event, void *private_data)
+{
+	UNUSED_PARAMETER(private_data);
+	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING) {
+		scene_changing = 1;
+	}
+
+	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED) {
+		scene_changing = 0;
+	}
+}
+
 bool obs_module_load(void)
 {
 	obs_frontend_add_event_callback(front_ready_cb, NULL);
+	obs_frontend_add_event_callback(scene_change_cb, NULL);
 	obs_log(LOG_INFO, "STIR loading modules");
 	obs_register_source(&stir_router_info);
 	obs_log(LOG_INFO, "Router: registered filter");
