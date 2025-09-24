@@ -38,7 +38,7 @@
     },
     "name": "stir",
     "displayName": "multichannel audio filter suite for OBS",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "author": "mintea",
     "website": "https://mintea.pw",
     "email": "me@mintea.pw"
