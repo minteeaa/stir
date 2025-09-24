@@ -94,6 +94,14 @@ void stir_router_update(void *data, obs_data_t *settings)
 	}
 }
 
+void stir_router_scene_change_cb(enum obs_frontend_event event, void *private_data)
+{
+	struct stir_router_data *stir_router = private_data;
+	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED) {
+		register_new_stir_source(stir_router);
+	}
+}
+
 void *stir_router_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct stir_router_data *stir_router = bzalloc(sizeof(struct stir_router_data));
@@ -128,7 +136,11 @@ void stir_router_add(void *data, obs_source_t *source)
 	stir_router->parent_name = obs_source_get_name(source);
 
 	if (front_init == 1) {
-		register_new_stir_source(stir_router);
+		if (scene_changing == 0) {
+			register_new_stir_source(stir_router);
+		} else {
+			obs_frontend_add_event_callback(stir_router_scene_change_cb, stir_router);
+		}
 	} else {
 		register_front_ready_cb(register_new_stir_source, stir_router, stir_router);
 	}
