@@ -53,7 +53,6 @@ static void update_stir_source(void *private_data)
 		obs_source_t *src = obs_get_source_by_name(src_name);
 		if (src != NULL) {
 			stir_router->virtual_source = src;
-			obs_source_release(src);
 		} else {
 			stir_router->virtual_source = obs_source_create("stir_virtual_out", src_name, NULL, NULL);
 		}
