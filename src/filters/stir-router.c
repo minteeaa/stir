@@ -12,7 +12,6 @@
 #include "filters/stir-router.h"
 #include "stir-context.h"
 #include "chain.h"
-#include "util/base.h"
 #include "util/c99defs.h"
 
 struct stir_router_data {
@@ -52,12 +51,9 @@ static void update_stir_source(void *private_data)
 		if (src != NULL) {
 			stir_router->virtual_source = src;
 			obs_source_release(src);
-			obs_log(LOG_INFO, "found src");
 		} else {
 			stir_router->virtual_source = obs_source_create("stir_virtual_out", src_name, NULL, NULL);
-			obs_log(LOG_INFO, "new src");
 		}
-		obs_log(LOG_INFO, "src set");
 		bfree(src_name);
 		obs_source_set_audio_mixers(stir_router->virtual_source, 0x1);
 	}
@@ -104,8 +100,8 @@ void stir_router_update(void *data, obs_data_t *settings)
 void stir_router_scene_change_cb(enum obs_frontend_event event, void *private_data)
 {
 	struct stir_router_data *stir_router = private_data;
-	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED) {
-		obs_log(LOG_INFO, "router scene changed");
+	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED ||
+	    event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_RENAMED) {
 		update_stir_source(stir_router);
 	}
 }
@@ -124,11 +120,9 @@ void *stir_router_create(obs_data_t *settings, obs_source_t *source)
 
 void stir_router_destroy(void *data)
 {
-	obs_log(LOG_INFO, "destruct data");
 	struct stir_router_data *stir_router = data;
 	if (stir_router->virtual_source) {
 		obs_source_release(stir_router->virtual_source);
-		obs_log(LOG_INFO, "remove source");
 	}
 	stir_context_destroy(stir_router->buffer_context);
 	obs_frontend_remove_event_callback(stir_router_scene_change_cb, stir_router);
@@ -148,10 +142,8 @@ void stir_router_add(void *data, obs_source_t *source)
 	if (front_init == 1) {
 		if (scene_changing == 0) {
 			update_stir_source(stir_router);
-			obs_log(LOG_INFO, "ch0");
 		} else {
 			obs_frontend_add_event_callback(stir_router_scene_change_cb, stir_router);
-			obs_log(LOG_INFO, "ch1");
 		}
 	} else {
 		register_front_ready_cb(update_stir_source, stir_router, stir_router);
