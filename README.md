@@ -11,9 +11,6 @@
 
 ---
 
-> [!NOTE]
-> the GitHub repository is a **mirror** of the primary repository on [Codeberg](https://codeberg.org/mintea/stir), and is subject to inconsistencies at any given time.
-
 ### what is this
 *audio filter/upmixer designed for many channels*
 
@@ -40,7 +37,7 @@ refer to the [wiki](https://codeberg.org/mintea/stir/wiki) for setup and usage.
 | linux       | supported   |
 | macOS       | unsupported |
 
-> linux has been tested and confirmed to work on Arch Linux. other distros *should* be supported by default. there are no current plans to support macOS.
+> Arch Linux has been tested. other distros *should* be supported by default. there are no current plans to support macOS.
 
 ### credits
 *friends who contributed directly and indirectly to this project*
