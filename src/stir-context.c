@@ -89,6 +89,11 @@ const char *stir_ctx_get_id(stir_context_t *ctx)
 	return ctx ? ctx->id : NULL;
 }
 
+const char *stir_ctx_get_disp(stir_context_t *ctx)
+{
+	return ctx ? ctx->disp : NULL;
+}
+
 float *stir_ctx_get_buf(stir_context_t *ctx)
 {
 	return ctx ? ctx->buffer : NULL;

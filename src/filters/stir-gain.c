@@ -89,15 +89,16 @@ obs_properties_t *stir_gain_properties(void *data)
 			obs_properties_t *cur_ch_g = obs_properties_create();
 			for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
 				char id[24];
-				snprintf(id, sizeof(id), "%s_gain_ch_%zu", ctx_c->ctx[c]->id, k % 6u);
+				snprintf(id, sizeof(id), "%s_gain_ch_%zu", stir_ctx_get_id(ctx_c->ctx[c]), k % 6u);
 				char desc[24];
-				snprintf(desc, sizeof(desc), "%s Channel %zu", ctx_c->ctx[c]->disp, (k + 1) % 7u);
+				snprintf(desc, sizeof(desc), "%s Channel %zu", stir_ctx_get_disp(ctx_c->ctx[c]),
+					 (k + 1) % 7u);
 				obs_properties_add_bool(cur_ch_g, id, desc);
 			}
 			char grc[24];
-			snprintf(grc, sizeof(grc), "%s_gain_channels", ctx_c->ctx[c]->id);
+			snprintf(grc, sizeof(grc), "%s_gain_channels", stir_ctx_get_id(ctx_c->ctx[c]));
 			char disp[24];
-			snprintf(disp, sizeof(disp), "%s Channels", ctx_c->ctx[c]->disp);
+			snprintf(disp, sizeof(disp), "%s Channels", stir_ctx_get_disp(ctx_c->ctx[c]));
 			obs_properties_add_group(props, grc, disp, OBS_GROUP_NORMAL, cur_ch_g);
 		}
 	}
