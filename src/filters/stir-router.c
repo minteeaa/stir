@@ -112,19 +112,10 @@ void stir_router_update(void *data, obs_data_t *settings)
 	stir_router->sub_w = (float)obs_data_get_double(settings, "ms_width_sub");
 }
 
-void stir_router_scene_change_cb(enum obs_frontend_event event, void *private_data)
-{
-	struct stir_router_data *stir_router = private_data;
-	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED ||
-	    event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_RENAMED) {
-		update_stir_source(stir_router);
-	}
-}
-
 void *stir_router_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct stir_router_data *stir_router = bzalloc(sizeof(struct stir_router_data));
-	stir_context_t *ctx = stir_context_create();
+	stir_context_t *ctx = stir_context_create(source, "main");
 	stir_router->buffer_context = ctx;
 	stir_router->channels = audio_output_get_channels(obs_get_audio());
 	stir_router->context = source;
@@ -140,7 +131,6 @@ void stir_router_destroy(void *data)
 		obs_source_release(stir_router->virtual_source);
 	}
 	stir_context_destroy(stir_router->buffer_context);
-	obs_frontend_remove_event_callback(stir_router_scene_change_cb, stir_router);
 	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name,
 				  stir_router);
 	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters",

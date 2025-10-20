@@ -2,7 +2,7 @@
 #include "ext/uthash.h"
 #include "util/c99defs.h"
 
-#define MAX_FILTERS 16 // arbitrary limit for now, will likely become dynamic in the future
+#define MAX_FILTERS 32 // TODO: make limit dynamic perhaps
 
 struct filter_entry {
 	void *instance;
