@@ -1,5 +1,5 @@
-#include "ext/uthash.h"
 #include "stir-context.h"
+#include "ext/uthash.h"
 
 #define MAX_CONTEXTS 4
 
@@ -23,7 +23,8 @@ context_collection_t *ctx_c_find(obs_source_t *source)
 	return entry ? entry->ctx_c : NULL;
 }
 
-void ctx_c_insert(obs_source_t *source, context_collection_t *ctx_c) {
+void ctx_c_insert(obs_source_t *source, context_collection_t *ctx_c) 
+{
 	struct source_context *entry = bzalloc(sizeof(*entry));
 	entry->ctx_c = ctx_c;
 	entry->source = source;
@@ -32,8 +33,6 @@ void ctx_c_insert(obs_source_t *source, context_collection_t *ctx_c) {
 
 stir_context_t *stir_context_create(obs_source_t *source, const char *id)
 {
-	struct source_context *entry = bzalloc(sizeof(*entry));
-	context_collection_t *ctx_c = ctx_c_find(source);
 	stir_context_t *ctx = bzalloc(sizeof(stir_context_t));
 	if (ctx) {
 		ctx->channels = MAX_AUDIO_CHANNELS;
@@ -41,6 +40,8 @@ stir_context_t *stir_context_create(obs_source_t *source, const char *id)
 		ctx->buffer = bzalloc(ctx->channels * ctx->frames * sizeof(float));
 		ctx->id = id;
 	}
+
+	context_collection_t *ctx_c = ctx_c_find(source);
 
 	if (ctx_c == NULL) {
 		context_collection_t *n_ctx_c = bzalloc(sizeof(context_collection_t));
@@ -57,7 +58,7 @@ stir_context_t *stir_context_create(obs_source_t *source, const char *id)
 	return ctx;
 }
 
-void stir_context_destroy(stir_context_t *ctx, obs_source_t *source)
+void ctx_c_delete(obs_source_t *source)
 {
 	struct source_context *entry;
 	HASH_FIND_PTR(ctx_list, &source, entry);
@@ -65,8 +66,29 @@ void stir_context_destroy(stir_context_t *ctx, obs_source_t *source)
 		HASH_DEL(ctx_list, entry);
 		bfree(entry);
 	}
+}
+
+void ctx_c_remove(stir_context_t *ctx, obs_source_t *source)
+{
+	context_collection_t *ctx_c = ctx_c_find(source);
+	for (size_t i = 0; i < ctx_c->length; ++i) {
+		if (ctx_c->ctx[i] == ctx) {
+			for (size_t j = i; j < ctx_c->length - 1; ++j) {
+				ctx_c->ctx[j] = ctx_c->ctx[j + 1];
+			}
+			ctx_c->length--;
+			if (ctx_c->length == 0) {
+				bfree(ctx_c);
+				ctx_c_delete(source);
+			}
+		}
+	}
+}
+
+void stir_context_destroy(stir_context_t *ctx, obs_source_t *source)
+{
+	ctx_c_remove(ctx, source);
 	bfree(ctx->buffer);
-	bfree(ctx->ms_buffer);
 	bfree(ctx);
 }
 

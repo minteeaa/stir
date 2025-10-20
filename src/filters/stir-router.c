@@ -28,6 +28,7 @@ struct stir_router_data {
 	uint8_t ch_config[MAX_AUDIO_CHANNELS];
 
 	stir_context_t *buffer_context;
+	stir_context_t *ms_context;
 	signal_handler_t *parent_sig_handler;
 };
 
@@ -107,18 +108,21 @@ void stir_router_update(void *data, obs_data_t *settings)
 	}
 
 	stir_router->ms_encoding = obs_data_get_bool(settings, "ms_encoding");
-	
-	stir_router->add_w = (float)obs_data_get_double(settings, "ms_width_add");
-	stir_router->sub_w = (float)obs_data_get_double(settings, "ms_width_sub");
+}
+
+void stir_router_scene_change_cb(enum obs_frontend_event event, void *private_data)
+{
+	struct stir_router_data *stir_router = private_data;
+	if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED ||
+	    event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_RENAMED) {
+		update_stir_source(stir_router);
+	}
 }
 
 void *stir_router_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct stir_router_data *stir_router = bzalloc(sizeof(struct stir_router_data));
-	stir_context_t *ctx = stir_context_create(source, "main");
-	stir_router->buffer_context = ctx;
 	stir_router->channels = audio_output_get_channels(obs_get_audio());
-	stir_router->context = source;
 	stir_router->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 	stir_router_update(stir_router, settings);
 	return stir_router;
@@ -130,7 +134,6 @@ void stir_router_destroy(void *data)
 	if (stir_router->virtual_source) {
 		obs_source_release(stir_router->virtual_source);
 	}
-	stir_context_destroy(stir_router->buffer_context);
 	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name,
 				  stir_router);
 	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters",
@@ -143,6 +146,10 @@ void stir_router_add(void *data, obs_source_t *source)
 	struct stir_router_data *stir_router = data;
 	stir_router->parent = source;
 	stir_router->parent_name = obs_source_get_name(source);
+	stir_context_t *ctx = stir_context_create(stir_router->parent, "main");
+	stir_context_t *ms_ctx = stir_context_create(stir_router->parent, "ms");
+	stir_router->buffer_context = ctx;
+	stir_router->ms_context = ms_ctx;
 
 	if (front_init == 1) {
 		if (scene_changing == 0) {
@@ -159,12 +166,20 @@ void stir_router_add(void *data, obs_source_t *source)
 			       update_filter_chain, stir_router);
 }
 
+void stir_router_remove(void *data, obs_source_t *source)
+{
+	struct stir_router_data *stir_router = data;
+	stir_context_destroy(stir_router->buffer_context, stir_router->parent);
+	stir_context_destroy(stir_router->ms_context, stir_router->parent);
+}
+
 struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *audio)
 {
 	struct stir_router_data *stir_router = data;
 	const size_t channels = stir_router->channels;
 	const uint32_t sample_ct = audio->frames;
 	stir_context_t *ctx = stir_router->buffer_context;
+	stir_context_t *ms_ctx = stir_router->ms_context;
 
 	if (sample_ct == 0)
 		return audio;
@@ -174,7 +189,7 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 
 	float **audio_data = (float **)audio->data;
 	float *buffer = stir_get_buf(ctx);
-	float *ms_buffer = stir_get_ms_buf(ctx);
+	float *ms_buffer = stir_get_buf(ms_ctx);
 
 	for (size_t ch = 0; ch < channels; ch++) {
 		for (uint32_t i = 0; i < sample_ct; i++) {
@@ -301,7 +316,8 @@ struct obs_source_info stir_router_info = {.id = "stir_router",
 					   .update = stir_router_update,
 					   .filter_audio = stir_router_process,
 					   .get_properties = stir_router_properties,
-					   .filter_add = stir_router_add};
+					   .filter_add = stir_router_add,
+					   .filter_remove = stir_router_remove};
 
 struct obs_source_info virtual_audio_info = {.id = "stir_virtual_out",
 					     .type = OBS_SOURCE_TYPE_INPUT,
