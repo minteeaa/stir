@@ -146,8 +146,8 @@ void stir_router_add(void *data, obs_source_t *source)
 	struct stir_router_data *stir_router = data;
 	stir_router->parent = source;
 	stir_router->parent_name = obs_source_get_name(source);
-	stir_context_t *ctx = stir_context_create(stir_router->parent, "main");
-	stir_context_t *ms_ctx = stir_context_create(stir_router->parent, "ms");
+	stir_context_t *ctx = stir_context_create(stir_router->parent, "main", "Main");
+	stir_context_t *ms_ctx = stir_context_create(stir_router->parent, "ms", "Mid Side");
 	stir_router->buffer_context = ctx;
 	stir_router->ms_context = ms_ctx;
 
@@ -188,8 +188,8 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 		return audio;
 
 	float **audio_data = (float **)audio->data;
-	float *buffer = stir_get_buf(ctx);
-	float *ms_buffer = stir_get_buf(ms_ctx);
+	float *buffer = stir_ctx_get_buf(ctx);
+	float *ms_buffer = stir_ctx_get_buf(ms_ctx);
 
 	for (size_t ch = 0; ch < channels; ch++) {
 		for (uint32_t i = 0; i < sample_ct; i++) {

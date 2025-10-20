@@ -114,7 +114,7 @@ void *stir_highpass_create(obs_data_t *settings, obs_source_t *source)
 static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect)
 {
 	struct highpass_state *state = (struct highpass_state *)userdata;
-	float *buf = stir_get_buf(ctx);
+	float *buf = stir_ctx_get_buf(ctx);
 	for (size_t i = 0; i < state->channels; ++i) {
 		if (state->mask & (1 << i)) {
 			struct channel_variables *channel_vars = &state->channel_state[i];

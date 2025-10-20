@@ -116,7 +116,7 @@ float echo(float in, struct channel_variables *ch, struct echo_state *state)
 static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect)
 {
 	struct echo_state *state = (struct echo_state *)userdata;
-	float *buf = stir_get_buf(ctx);
+	float *buf = stir_ctx_get_buf(ctx);
 	for (size_t i = 0; i < state->channels; ++i) {
 		if (state->mask & (1 << i)) {
 			struct channel_variables *channel_vars = &state->channel_state[i];
