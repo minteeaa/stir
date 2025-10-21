@@ -257,13 +257,14 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 				float side = 0.5f * (left - right);
 				m_buffer[ch * sample_ct + i] = mid;
 				s_buffer[ch * sample_ct + i] = side;
+
+				stir_process_filters(stir_router->parent, m_ctx, sample_ct);
+				stir_process_filters(stir_router->parent, s_ctx, sample_ct);
 			}
 		}
 	}
 
 	stir_process_filters(stir_router->parent, ctx, sample_ct);
-	stir_process_filters(stir_router->parent, m_ctx, sample_ct);
-	stir_process_filters(stir_router->parent, s_ctx, sample_ct);
 
 	struct obs_source_audio audio_o = {.speakers = channels,
 					   .frames = sample_ct,
