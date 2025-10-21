@@ -11,7 +11,7 @@ struct source_context {
 
 static struct source_context *ctx_list = NULL;
 
-void ctx_c_insert(obs_source_t *source, context_collection_t *ctx_c) 
+void ctx_c_insert(obs_source_t *source, context_collection_t *ctx_c)
 {
 	struct source_context *entry = bzalloc(sizeof(*entry));
 	entry->ctx_c = ctx_c;
@@ -82,15 +82,14 @@ stir_context_t *stir_context_create(obs_source_t *source, const char *id, const 
 
 void stir_context_destroy(stir_context_t *ctx, obs_source_t *source)
 {
-	if (ctx)
-	{
+	if (ctx) {
 		ctx_c_remove(ctx, source);
 		bfree(ctx->buffer);
 		bfree(ctx);
 	}
 }
 
-const char *stir_ctx_get_id(stir_context_t *ctx) 
+const char *stir_ctx_get_id(stir_context_t *ctx)
 {
 	return ctx ? ctx->id : NULL;
 }

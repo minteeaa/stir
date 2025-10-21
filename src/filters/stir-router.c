@@ -16,7 +16,6 @@
 
 struct stir_router_data {
 	obs_source_t *virtual_source;
-	obs_source_t *context;
 	obs_source_t *parent;
 	const char *parent_name;
 	size_t channels;
@@ -123,10 +122,12 @@ void stir_router_update(void *data, obs_data_t *settings)
 		} else if (strcmp(obs_data_get_string(settings, id), "stereo_mix") == 0) {
 			stir_router->ch_config[ch] = 2;
 		} else if (strcmp(obs_data_get_string(settings, id), "ms_add") == 0) {
-			if (!mse) obs_data_set_string(settings, id, obs_data_get_default_string(settings, id));
+			if (!mse)
+				obs_data_set_string(settings, id, obs_data_get_default_string(settings, id));
 			stir_router->ch_config[ch] = 4;
 		} else if (strcmp(obs_data_get_string(settings, id), "ms_sub") == 0) {
-			if (!mse) obs_data_set_string(settings, id, obs_data_get_default_string(settings, id));
+			if (!mse)
+				obs_data_set_string(settings, id, obs_data_get_default_string(settings, id));
 			stir_router->ch_config[ch] = 5;
 		} else {
 			stir_router->ch_config[ch] = 3;
@@ -137,7 +138,6 @@ void stir_router_update(void *data, obs_data_t *settings)
 	stir_router->sub_w = (float)obs_data_get_double(settings, "ms_width_sub");
 	if (stir_router->parent)
 		update_ms_ctx_c(stir_router);
-
 }
 
 void stir_router_scene_change_cb(enum obs_frontend_event event, void *private_data)
@@ -151,6 +151,7 @@ void stir_router_scene_change_cb(enum obs_frontend_event event, void *private_da
 
 void *stir_router_create(obs_data_t *settings, obs_source_t *source)
 {
+	UNUSED_PARAMETER(source);
 	struct stir_router_data *stir_router = bzalloc(sizeof(struct stir_router_data));
 	stir_router->channels = audio_output_get_channels(obs_get_audio());
 	stir_router->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
@@ -198,6 +199,7 @@ void stir_router_add(void *data, obs_source_t *source)
 
 void stir_router_remove(void *data, obs_source_t *source)
 {
+	UNUSED_PARAMETER(source);
 	struct stir_router_data *stir_router = data;
 	stir_context_destroy(stir_router->buffer_context, stir_router->parent);
 	if (stir_router->ms_encoding) {
@@ -272,7 +274,6 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 					   .samples_per_sec = audio_output_get_sample_rate(obs_get_audio()),
 					   .timestamp = audio->timestamp};
 
-
 	for (size_t ch = 0; ch < channels; ch++) {
 		if (stir_router->ms_encoding) {
 			for (uint32_t i = 0; i < sample_ct; i++) {
@@ -287,7 +288,7 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 						(stir_router->sub_w * s_buffer[ch * sample_ct + i]);
 			}
 		}
-		
+
 		audio_o.data[ch] = (uint8_t *)(buffer + ch * sample_ct);
 	}
 
@@ -295,12 +296,13 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 	return audio;
 }
 
-void rebuild_ch_list(obs_properties_t *props, bool ms) {
+void rebuild_ch_list(obs_properties_t *props, bool ms)
+{
 	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
 		char id[12];
-		snprintf(id, sizeof(id), "ch_src_%zu", k);
+		snprintf(id, sizeof(id), "ch_src_%zu", k % 8u);
 		char desc[12];
-		snprintf(desc, sizeof(desc), "Channel %zu", k + 1);	
+		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 8u);
 		obs_property_t *chs = obs_properties_get(props, id);
 		obs_property_list_clear(chs);
 		obs_property_list_add_string(chs, "Mono Left", "mono_left");
@@ -314,7 +316,9 @@ void rebuild_ch_list(obs_properties_t *props, bool ms) {
 	}
 }
 
-static bool ms_cb(obs_properties_t *props, obs_property_t *property, obs_data_t *settings) {
+static bool ms_cb(obs_properties_t *props, obs_property_t *property, obs_data_t *settings)
+{
+	UNUSED_PARAMETER(property);
 	bool ms = obs_data_get_bool(settings, "ms_encoding");
 	rebuild_ch_list(props, ms);
 	return true;
@@ -328,19 +332,20 @@ obs_properties_t *stir_router_properties(void *data)
 	obs_properties_add_group(props, "channel_sources", "Channel Sources", OBS_GROUP_NORMAL, channel_sources);
 	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
 		char id[12];
-		snprintf(id, sizeof(id), "ch_src_%zu", k);
+		snprintf(id, sizeof(id), "ch_src_%zu", k % 8u);
 		char desc[12];
-		snprintf(desc, sizeof(desc), "Channel %zu", k + 1);	
-		obs_property_t *chs = obs_properties_add_list(channel_sources, id, desc, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 8u);
+		obs_properties_add_list(channel_sources, id, desc, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 	}
 	obs_properties_t *ms = obs_properties_create();
-	obs_property_t *msg = obs_properties_add_group(props, "ms_encoding", "Mid Side Encoding", OBS_GROUP_CHECKABLE, ms);
+	obs_property_t *msg =
+		obs_properties_add_group(props, "ms_encoding", "Mid Side Encoding", OBS_GROUP_CHECKABLE, ms);
 	obs_properties_add_float_slider(ms, "ms_width_add", "+Side Width", -1.0, 2.0, 0.01);
 	obs_properties_add_float_slider(ms, "ms_width_sub", "-Side Width", -1.0, 2.0, 0.01);
 
 	rebuild_ch_list(props, stir_router->ms_encoding);
 	obs_property_set_modified_callback(msg, ms_cb);
-	
+
 	return props;
 }
 
