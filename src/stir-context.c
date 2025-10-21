@@ -1,6 +1,8 @@
 #include "stir-context.h"
 #include "ext/uthash.h"
 
+#include <plugin-support.h>
+
 struct source_context {
 	obs_source_t *source;
 	context_collection_t *ctx_c;
@@ -51,13 +53,14 @@ context_collection_t *stir_ctx_c_find(obs_source_t *source)
 	return entry ? entry->ctx_c : NULL;
 }
 
-stir_context_t *stir_context_create(obs_source_t *source, const char *id, const char *disp)
+stir_context_t *stir_context_create(obs_source_t *source, const char *id, const char *disp, uint8_t num_id)
 {
 	stir_context_t *ctx = bzalloc(sizeof(stir_context_t));
 	if (ctx) {
 		ctx->buffer = bzalloc(MAX_AUDIO_CHANNELS * AUDIO_OUTPUT_FRAMES * sizeof(float));
 		ctx->id = id;
 		ctx->disp = disp;
+		ctx->num_id = num_id;
 	}
 
 	context_collection_t *ctx_c = stir_ctx_c_find(source);
@@ -79,14 +82,22 @@ stir_context_t *stir_context_create(obs_source_t *source, const char *id, const 
 
 void stir_context_destroy(stir_context_t *ctx, obs_source_t *source)
 {
-	ctx_c_remove(ctx, source);
-	bfree(ctx->buffer);
-	bfree(ctx);
+	if (ctx)
+	{
+		ctx_c_remove(ctx, source);
+		bfree(ctx->buffer);
+		bfree(ctx);
+	}
 }
 
 const char *stir_ctx_get_id(stir_context_t *ctx) 
 {
 	return ctx ? ctx->id : NULL;
+}
+
+uint8_t stir_ctx_get_num_id(stir_context_t *ctx)
+{
+	return ctx ? ctx->num_id : 0;
 }
 
 const char *stir_ctx_get_disp(stir_context_t *ctx)

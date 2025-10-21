@@ -11,7 +11,7 @@ struct gain_state {
 	obs_source_t *parent;
 
 	float gain;
-	uint8_t mask;
+	uint32_t mask;
 	size_t channels;
 };
 
@@ -31,14 +31,20 @@ void stir_gain_update(void *data, obs_data_t *settings)
 {
 	struct gain_state *state = data;
 	state->gain = db_to_mul((float)obs_data_get_double(settings, "gain"));
+	context_collection_t *ctx_c = stir_ctx_c_find(state->parent);
 
-	for (size_t ch = 0; ch < state->channels; ++ch) {
-		char key[12];
-		snprintf(key, sizeof(key), "gain_ch_%zu", ch % 6u);
-		if (obs_data_get_bool(settings, key)) {
-			state->mask |= (1 << ch);
-		} else {
-			state->mask &= ~(1 << ch);
+	if (ctx_c) {
+		for (size_t c = 0; c < ctx_c->length; ++c) {
+			for (size_t ch = 0; ch < state->channels; ++ch) {
+				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
+				char key[24];
+				snprintf(key, sizeof(key), "%u_gain_ch_%zu", id % 4u, ch % 6u);
+				if (obs_data_get_bool(settings, key)) {
+					state->mask |= (1 << (id * state->channels + ch));
+				} else {
+					state->mask &= ~(1 << (id * state->channels + ch));
+				}
+			}
 		}
 	}
 }
@@ -56,8 +62,9 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 {
 	struct gain_state *state = (struct gain_state *)userdata;
 	float *buf = stir_ctx_get_buf(ctx);
+	uint8_t id = stir_ctx_get_num_id(ctx);
 	for (size_t i = 0; i < state->channels; ++i) {
-		if (state->mask & (1 << i)) {
+		if (state->mask & (1 << (id * state->channels + i))) {
 			for (size_t fr = 0; fr < samplect; ++fr) {
 				buf[i * samplect + fr] *= state->gain;
 			}
@@ -88,12 +95,13 @@ obs_properties_t *stir_gain_properties(void *data)
 		for (size_t c = 0; c < ctx_c->length; ++c) {
 			obs_properties_t *cur_ch_g = obs_properties_create();
 			for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-				char id[24];
-				snprintf(id, sizeof(id), "%s_gain_ch_%zu", stir_ctx_get_id(ctx_c->ctx[c]), k % 6u);
+				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
+				char key[24];
+				snprintf(key, sizeof(key), "%u_gain_ch_%zu", id % 4u, k % 6u);
 				char desc[24];
 				snprintf(desc, sizeof(desc), "%s Channel %zu", stir_ctx_get_disp(ctx_c->ctx[c]),
 					 (k + 1) % 7u);
-				obs_properties_add_bool(cur_ch_g, id, desc);
+				obs_properties_add_bool(cur_ch_g, key, desc);
 			}
 			char grc[24];
 			snprintf(grc, sizeof(grc), "%s_gain_channels", stir_ctx_get_id(ctx_c->ctx[c]));
