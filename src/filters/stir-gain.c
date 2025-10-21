@@ -5,6 +5,7 @@
 
 #include "stir-context.h"
 #include "chain.h"
+#include "util.h"
 
 struct gain_state {
 	obs_source_t *context;
@@ -89,27 +90,9 @@ obs_properties_t *stir_gain_properties(void *data)
 {
 	struct gain_state *state = data;
 	obs_properties_t *props = obs_properties_create();
-	context_collection_t *ctx_c = stir_ctx_c_find(state->parent);
 
-	if (ctx_c) {
-		for (size_t c = 0; c < ctx_c->length; ++c) {
-			obs_properties_t *cur_ch_g = obs_properties_create();
-			for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
-				char key[24];
-				snprintf(key, sizeof(key), "%u_gain_ch_%zu", id % 4u, k % 6u);
-				char desc[24];
-				snprintf(desc, sizeof(desc), "%s Channel %zu", stir_ctx_get_disp(ctx_c->ctx[c]),
-					 (k + 1) % 7u);
-				obs_properties_add_bool(cur_ch_g, key, desc);
-			}
-			char grc[24];
-			snprintf(grc, sizeof(grc), "%s_gain_channels", stir_ctx_get_id(ctx_c->ctx[c]));
-			char disp[24];
-			snprintf(disp, sizeof(disp), "%s Channels", stir_ctx_get_disp(ctx_c->ctx[c]));
-			obs_properties_add_group(props, grc, disp, OBS_GROUP_NORMAL, cur_ch_g);
-		}
-	}
+	filter_make_ch_list(props, state->parent, "gain");
+
 	obs_property_t *p = obs_properties_add_float_slider(props, "gain", "Gain Amount", -30.0, 30.0, 0.1);
 	obs_property_float_set_suffix(p, " dB");
 	return props;
@@ -117,10 +100,12 @@ obs_properties_t *stir_gain_properties(void *data)
 
 void stir_gain_defaults(obs_data_t *settings)
 {
-	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[12];
-		snprintf(id, sizeof(id), "gain_ch_%zu", k % 6u);
-		obs_data_set_default_bool(settings, id, false);
+	for (size_t c = 0; c < MAX_CONTEXTS; ++c) {
+		for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
+			char id[12];
+			snprintf(id, sizeof(id), "%zu_gain_ch_%zu", c, k % 6u);
+			obs_data_set_default_bool(settings, id, false);
+		}
 	}
 	obs_data_set_default_double(settings, "gain", 0.0);
 }

@@ -7,6 +7,7 @@
 #include "filters/stir-tremolo.h"
 #include "stir-context.h"
 #include "chain.h"
+#include "util.h"
 
 struct channel_variables {
 	float phase;
@@ -14,6 +15,7 @@ struct channel_variables {
 
 struct tremolo_state {
 	obs_source_t *context;
+	obs_source_t *parent;
 
 	struct channel_variables channel_state[MAX_AUDIO_CHANNELS];
 	float rate;
@@ -45,13 +47,20 @@ void stir_tremolo_update(void *data, obs_data_t *settings)
 	state->wetmix = (float)obs_data_get_double(settings, "tremolo_wet_mix");
 	state->drymix = (float)obs_data_get_double(settings, "tremolo_dry_mix");
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-	for (size_t ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
-		char key[11];
-		snprintf(key, sizeof(key), "lfo_ch_%zu", ch % 6u);
-		if (obs_data_get_bool(settings, key)) {
-			state->mask |= (1 << ch);
-		} else {
-			state->mask &= ~(1 << ch);
+	context_collection_t *ctx_c = stir_ctx_c_find(state->parent);
+
+	if (ctx_c) {
+		for (size_t c = 0; c < ctx_c->length; ++c) {
+			for (size_t ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
+				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
+				char key[24];
+				snprintf(key, sizeof(key), "%u_lfo_ch_%zu", id, ch % 8u);
+				if (obs_data_get_bool(settings, key)) {
+					state->mask |= (1 << (id * state->channels + ch));
+				} else {
+					state->mask &= ~(1 << (id * state->channels + ch));
+				}
+			}
 		}
 	}
 }
@@ -82,8 +91,9 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 {
 	struct tremolo_state *state = (struct tremolo_state *)userdata;
 	float *buf = stir_ctx_get_buf(ctx);
+	uint8_t id = stir_ctx_get_num_id(ctx);
 	for (size_t i = 0; i < state->channels; ++i) {
-		if (state->mask & (1 << i)) {
+		if (state->mask & (1 << (id * state->channels + i))) {
 			struct channel_variables *channel_vars = &state->channel_state[i];
 			for (size_t fr = 0; fr < samplect; ++fr) {
 				buf[i * samplect + fr] = tremolo(state, channel_vars, buf[i * samplect + fr]);
@@ -95,6 +105,7 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 void stir_tremolo_add(void *data, obs_source_t *source)
 {
 	struct tremolo_state *state = data;
+	state->parent = source;
 	stir_register_filter(source, "tremolo", state->context, process_audio, state);
 }
 
@@ -106,17 +117,10 @@ void stir_tremolo_remove(void *data, obs_source_t *source)
 
 obs_properties_t *stir_tremolo_properties(void *data)
 {
-	UNUSED_PARAMETER(data);
+	struct tremolo_state *state = data;
 	obs_properties_t *props = obs_properties_create();
-	obs_properties_t *tremolo_channels = obs_properties_create();
-	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[11];
-		snprintf(id, sizeof(id), "lfo_ch_%zu", k % 6u);
-		char desc[12];
-		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 7u);
-		obs_properties_add_bool(tremolo_channels, id, desc);
-	}
-	obs_properties_add_group(props, "tremolo_channels", "Channels", OBS_GROUP_NORMAL, tremolo_channels);
+
+	filter_make_ch_list(props, state->parent, "lfo");
 
 	obs_property_t *r = obs_properties_add_float_slider(props, "tremolo_rate", "Rate", 0.0, 20.0, 0.1);
 	obs_property_t *d = obs_properties_add_float_slider(props, "tremolo_depth", "Depth", 0.0, 100.0, 0.5);
@@ -131,10 +135,12 @@ obs_properties_t *stir_tremolo_properties(void *data)
 
 void stir_tremolo_defaults(obs_data_t *settings)
 {
-	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[11];
-		snprintf(id, sizeof(id), "lfo_ch_%zu", k % 6u);
-		obs_data_set_default_bool(settings, id, false);
+	for (size_t c = 0; c < MAX_CONTEXTS; ++c) {
+		for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
+			char id[11];
+			snprintf(id, sizeof(id), "%zu_lfo_ch_%zu", c, k % 8u);
+			obs_data_set_default_bool(settings, id, false);
+		}
 	}
 	obs_data_set_default_double(settings, "tremolo_rate", 4.0);
 	obs_data_set_default_double(settings, "tremolo_depth", 50.0);

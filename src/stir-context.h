@@ -2,7 +2,7 @@
 
 #include <obs-module.h>
 
-#define MAX_CONTEXTS 4
+#define MAX_CONTEXTS 3
 
 typedef struct stir_context {
 	float *buffer;
