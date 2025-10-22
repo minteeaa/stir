@@ -136,10 +136,9 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 	uint8_t id = stir_ctx_get_num_id(ctx);
 	for (size_t i = 0; i < state->channels; ++i) {
 		size_t index = id * state->channels + i;
-		if (state->mask & (1 << index)) {
-			struct channel_variables *channel_vars = state->ch_state[index];
+		if ((state->mask & (1 << index)) && (state->ch_state[index])) {
 			for (size_t fr = 0; fr < samplect; ++fr) {
-				buf[i * samplect + fr] = echo(buf[i * samplect + fr], channel_vars, state);
+				buf[i * samplect + fr] = echo(buf[i * samplect + fr], state->ch_state[index], state);
 			}
 		}
 	}
