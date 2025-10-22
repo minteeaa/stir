@@ -260,10 +260,13 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 				m_buffer[ch * sample_ct + i] = mid;
 				s_buffer[ch * sample_ct + i] = side;
 
-				stir_process_filters(stir_router->parent, m_ctx, sample_ct);
-				stir_process_filters(stir_router->parent, s_ctx, sample_ct);
 			}
 		}
+	}
+
+	if (stir_router->ms_encoding) {
+		stir_process_filters(stir_router->parent, m_ctx, sample_ct);
+		stir_process_filters(stir_router->parent, s_ctx, sample_ct);
 	}
 
 	stir_process_filters(stir_router->parent, ctx, sample_ct);
