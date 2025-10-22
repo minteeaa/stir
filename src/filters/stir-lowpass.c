@@ -78,6 +78,10 @@ const char *stir_lowpass_get_name(void *data)
 void stir_lowpass_destroy(void *data)
 {
 	struct lowpass_state *state = data;
+	for (size_t ch = 0; ch < MAX_CONTEXTS * MAX_AUDIO_CHANNELS; ++ch) {
+		if (state->ch_state[ch])
+			bfree(state->ch_state[ch]);
+	}
 	bfree(state);
 }
 

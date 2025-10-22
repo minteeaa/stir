@@ -37,6 +37,10 @@ const char *stir_tremolo_get_name(void *data)
 void stir_tremolo_destroy(void *data)
 {
 	struct tremolo_state *state = data;
+	for (size_t ch = 0; ch < MAX_CONTEXTS * MAX_AUDIO_CHANNELS; ++ch) {
+		if (state->ch_state[ch])
+			bfree(state->ch_state[ch]);
+	}
 	bfree(state);
 }
 
