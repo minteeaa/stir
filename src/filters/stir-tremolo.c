@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
+#include <plugin-support.h>
 
 #include "filters/stir-tremolo.h"
 #include "stir-context.h"
@@ -17,13 +18,13 @@ struct tremolo_state {
 	obs_source_t *context;
 	obs_source_t *parent;
 
-	struct channel_variables channel_state[MAX_AUDIO_CHANNELS];
+	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
 	float rate;
 	float depth;
 	float wetmix, drymix;
 
 	float sample_rate;
-	uint8_t mask;
+	uint32_t mask;
 	size_t channels;
 };
 
@@ -51,14 +52,22 @@ void stir_tremolo_update(void *data, obs_data_t *settings)
 
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
-			for (size_t ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
+			for (size_t ch = 0; ch < state->channels; ++ch) {
 				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
+				size_t index = id * state->channels + ch;
 				char key[24];
 				snprintf(key, sizeof(key), "%u_lfo_ch_%zu", id, ch % 8u);
 				if (obs_data_get_bool(settings, key)) {
-					state->mask |= (1 << (id * state->channels + ch));
+					state->mask |= (1 << index);
+					if (!state->ch_state[index]) {
+						state->ch_state[index] = bzalloc(sizeof(struct channel_variables));
+					}
 				} else {
-					state->mask &= ~(1 << (id * state->channels + ch));
+					state->mask &= ~(1 << index);
+					if (state->ch_state[index]) {
+						bfree(state->ch_state[index]);
+						state->ch_state[index] = NULL;
+					}
 				}
 			}
 		}
@@ -93,8 +102,9 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 	float *buf = stir_ctx_get_buf(ctx);
 	uint8_t id = stir_ctx_get_num_id(ctx);
 	for (size_t i = 0; i < state->channels; ++i) {
-		if (state->mask & (1 << (id * state->channels + i))) {
-			struct channel_variables *channel_vars = &state->channel_state[i];
+		size_t index = id * state->channels + i;
+		if (state->mask & (1 << index)) {
+			struct channel_variables *channel_vars = state->ch_state[index];
 			for (size_t fr = 0; fr < samplect; ++fr) {
 				buf[i * samplect + fr] = tremolo(state, channel_vars, buf[i * samplect + fr]);
 			}
