@@ -16,7 +16,6 @@
 
 struct stir_router_data {
 	obs_source_t *virtual_source;
-	const char *virtual_source_uuid;
 	obs_source_t *parent;
 	const char *parent_name;
 	
@@ -50,9 +49,7 @@ static void update_stir_source(void *private_data)
 {
 	struct stir_router_data *stir_router = private_data;
 	if (!stir_router->virtual_source) {
-		if (stir_router->virtual_source_uuid) {
-			stir_router->virtual_source = obs_get_source_by_uuid(stir_router->virtual_source_uuid);
-		} else if (stir_router->parent_name) {
+		if (stir_router->parent_name) {
 			const char *s_pre = "STIR - ";
 			const char *s_suf = stir_router->parent_name;
 			char *src_name = concat(s_pre, s_suf);
@@ -60,12 +57,9 @@ static void update_stir_source(void *private_data)
 			if (src) {
 				stir_router->virtual_source = src;
 			} else {
-				const char *s_pre = "STIR - ";
-				const char *s_suf = obs_source_get_name(stir_router->parent);
 				stir_router->virtual_source =
 					obs_source_create("stir_virtual_out", src_name, NULL, NULL);
 			}
-			stir_router->virtual_source_uuid = obs_source_get_uuid(stir_router->virtual_source);
 			bfree(src_name);
 		}
 		obs_source_set_audio_mixers(stir_router->virtual_source, 0x1);
