@@ -126,7 +126,6 @@ void *stir_lowpass_create(obs_data_t *settings, obs_source_t *source)
 	struct lowpass_state *state = bzalloc(sizeof(struct lowpass_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
 	state->context = source;
-	stir_lowpass_update(state, settings);
 	return state;
 }
 
@@ -151,6 +150,7 @@ void stir_lowpass_add(void *data, obs_source_t *source)
 {
 	struct lowpass_state *state = data;
 	state->parent = source;
+	stir_lowpass_update(state, obs_source_get_settings(state->context));
 	stir_register_filter(source, "lowpass", state->context, process_audio, state);
 }
 

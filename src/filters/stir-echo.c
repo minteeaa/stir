@@ -105,7 +105,6 @@ void *stir_echo_create(obs_data_t *settings, obs_source_t *source)
 	state->delay_smoothed = 1.0f;
 	max_cbuf_frames =
 		(size_t)((MAX_ECHO_DELAY_MS * (float)audio_output_get_sample_rate(obs_get_audio())) / 1000.0f) + 1;
-	stir_echo_update(state, settings);
 	return state;
 }
 
@@ -148,6 +147,7 @@ void stir_echo_add(void *data, obs_source_t *source)
 {
 	struct echo_state *state = data;
 	state->parent = source;
+	stir_echo_update(state, obs_source_get_settings(state->context));
 	stir_register_filter(source, "echo", state->context, process_audio, state);
 }
 

@@ -126,7 +126,6 @@ void *stir_highpass_create(obs_data_t *settings, obs_source_t *source)
 	struct highpass_state *state = bzalloc(sizeof(struct highpass_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
 	state->context = source;
-	stir_highpass_update(state, settings);
 	return state;
 }
 
@@ -151,6 +150,7 @@ void stir_highpass_add(void *data, obs_source_t *source)
 {
 	struct highpass_state *state = data;
 	state->parent = source;
+	stir_highpass_update(state, obs_source_get_settings(state->context));
 	stir_register_filter(source, "highpass", state->context, process_audio, state);
 }
 
