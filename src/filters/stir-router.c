@@ -16,8 +16,10 @@
 
 struct stir_router_data {
 	obs_source_t *virtual_source;
+	const char *virtual_source_uuid;
 	obs_source_t *parent;
 	const char *parent_name;
+	
 	size_t channels;
 	float sample_rate;
 
@@ -47,17 +49,25 @@ const char *virtual_source_get_name(void *data)
 static void update_stir_source(void *private_data)
 {
 	struct stir_router_data *stir_router = private_data;
-	if (stir_router->virtual_source == NULL) {
-		const char *s_pre = "STIR - ";
-		const char *s_suf = stir_router->parent_name;
-		char *src_name = concat(s_pre, s_suf);
-		obs_source_t *src = obs_get_source_by_name(src_name);
-		if (src != NULL) {
-			stir_router->virtual_source = src;
-		} else {
-			stir_router->virtual_source = obs_source_create("stir_virtual_out", src_name, NULL, NULL);
+	if (!stir_router->virtual_source) {
+		if (stir_router->virtual_source_uuid) {
+			stir_router->virtual_source = obs_get_source_by_uuid(stir_router->virtual_source_uuid);
+		} else if (stir_router->parent_name) {
+			const char *s_pre = "STIR - ";
+			const char *s_suf = stir_router->parent_name;
+			char *src_name = concat(s_pre, s_suf);
+			obs_source_t *src = obs_get_source_by_name(src_name);
+			if (src) {
+				stir_router->virtual_source = src;
+			} else {
+				const char *s_pre = "STIR - ";
+				const char *s_suf = obs_source_get_name(stir_router->parent);
+				stir_router->virtual_source =
+					obs_source_create("stir_virtual_out", src_name, NULL, NULL);
+			}
+			stir_router->virtual_source_uuid = obs_source_get_uuid(stir_router->virtual_source);
+			bfree(src_name);
 		}
-		bfree(src_name);
 		obs_source_set_audio_mixers(stir_router->virtual_source, 0x1);
 	}
 }
@@ -67,11 +77,13 @@ static void update_name(void *private_data, calldata_t *cd)
 	struct stir_router_data *stir_router = private_data;
 	const char *new_name;
 	if (calldata_get_string(cd, "new_name", &new_name)) {
-		const char *s_pre = "STIR - ";
-		const char *s_suf = new_name;
-		char *src_name = concat(s_pre, s_suf);
-		obs_source_set_name(stir_router->virtual_source, src_name);
-		bfree(src_name);
+		if (stir_router->virtual_source) {
+			const char *s_pre = "STIR - ";
+			const char *s_suf = new_name;
+			char *src_name = concat(s_pre, s_suf);
+			obs_source_set_name(stir_router->virtual_source, src_name);
+			bfree(src_name);
+		}
 	}
 }
 
@@ -165,10 +177,6 @@ void stir_router_destroy(void *data)
 	if (stir_router->virtual_source) {
 		obs_source_release(stir_router->virtual_source);
 	}
-	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name,
-				  stir_router);
-	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters",
-				  update_filter_chain, stir_router);
 	bfree(stir_router);
 }
 
@@ -201,6 +209,11 @@ void stir_router_remove(void *data, obs_source_t *source)
 {
 	UNUSED_PARAMETER(source);
 	struct stir_router_data *stir_router = data;
+	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "rename", update_name,
+				  stir_router);
+	signal_handler_disconnect(obs_source_get_signal_handler(stir_router->parent), "reorder_filters",
+				  update_filter_chain, stir_router);
+	obs_frontend_remove_event_callback(stir_router_scene_change_cb, stir_router);
 	stir_context_destroy(stir_router->buffer_context, stir_router->parent);
 	if (stir_router->ms_encoding) {
 		stir_context_destroy(stir_router->m_context, stir_router->parent);
