@@ -124,6 +124,7 @@ void stir_highpass_update(void *data, obs_data_t *settings)
 
 void *stir_highpass_create(obs_data_t *settings, obs_source_t *source)
 {
+	UNUSED_PARAMETER(settings);
 	struct highpass_state *state = bzalloc(sizeof(struct highpass_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
 	state->context = source;

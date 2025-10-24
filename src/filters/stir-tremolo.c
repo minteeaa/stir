@@ -9,6 +9,7 @@
 #include "stir-context.h"
 #include "chain.h"
 #include "util.h"
+#include "util/c99defs.h"
 
 struct channel_variables {
 	float phase;
@@ -81,6 +82,7 @@ void stir_tremolo_update(void *data, obs_data_t *settings)
 
 void *stir_tremolo_create(obs_data_t *settings, obs_source_t *source)
 {
+	UNUSED_PARAMETER(settings);
 	struct tremolo_state *state = bzalloc(sizeof(struct tremolo_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
 	state->context = source;

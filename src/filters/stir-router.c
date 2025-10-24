@@ -18,7 +18,7 @@ struct stir_router_data {
 	obs_source_t *virtual_source;
 	obs_source_t *parent;
 	const char *parent_name;
-	
+
 	size_t channels;
 	float sample_rate;
 
@@ -266,7 +266,6 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 				float side = 0.5f * (left - right);
 				m_buffer[ch * sample_ct + i] = mid;
 				s_buffer[ch * sample_ct + i] = side;
-
 			}
 		}
 	}
