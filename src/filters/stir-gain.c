@@ -38,8 +38,9 @@ void stir_gain_update(void *data, obs_data_t *settings)
 		for (size_t c = 0; c < ctx_c->length; ++c) {
 			for (size_t ch = 0; ch < state->channels; ++ch) {
 				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
+				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
 				char key[24];
-				snprintf(key, sizeof(key), "%u_gain_ch_%zu", id % 4u, ch % 6u);
+				snprintf(key, sizeof(key), "%s_gain_ch_%zu", cid, ch % 8u);
 				if (obs_data_get_bool(settings, key)) {
 					state->mask |= (1 << (id * state->channels + ch));
 				} else {
@@ -55,6 +56,7 @@ void *stir_gain_create(obs_data_t *settings, obs_source_t *source)
 	struct gain_state *state = bzalloc(sizeof(struct gain_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
 	state->context = source;
+	stir_gain_update(state, settings);
 	return state;
 }
 
@@ -76,7 +78,11 @@ void stir_gain_add(void *data, obs_source_t *source)
 {
 	struct gain_state *state = data;
 	state->parent = source;
-	stir_gain_update(state, obs_source_get_settings(state->context));
+	obs_data_t *settings = obs_source_get_settings(state->context);
+	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
+	stir_gain_update(state, settings_safe);
+	obs_data_release(settings_safe);
+	obs_data_release(settings);
 	stir_register_filter(source, "gain", state->context, process_audio, state);
 }
 

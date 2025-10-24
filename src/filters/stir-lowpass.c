@@ -98,9 +98,10 @@ void stir_lowpass_update(void *data, obs_data_t *settings)
 		for (size_t c = 0; c < ctx_c->length; ++c) {
 			for (size_t ch = 0; ch < state->channels; ++ch) {
 				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
+				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
 				size_t index = id * state->channels + ch;
 				char key[24];
-				snprintf(key, sizeof(key), "%u_lp_ch_%zu", id, ch % 8u);
+				snprintf(key, sizeof(key), "%s_lp_ch_%zu", cid, ch % 8u);
 				if (obs_data_get_bool(settings, key)) {
 					state->mask |= (1 << index);
 					if (!state->ch_state[index]) {
@@ -150,7 +151,11 @@ void stir_lowpass_add(void *data, obs_source_t *source)
 {
 	struct lowpass_state *state = data;
 	state->parent = source;
-	stir_lowpass_update(state, obs_source_get_settings(state->context));
+	obs_data_t *settings = obs_source_get_settings(state->context);
+	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
+	stir_lowpass_update(state, settings_safe);
+	obs_data_release(settings_safe);
+	obs_data_release(settings);
 	stir_register_filter(source, "lowpass", state->context, process_audio, state);
 }
 

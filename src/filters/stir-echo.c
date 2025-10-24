@@ -46,11 +46,6 @@ const char *stir_echo_get_name(void *data)
 void stir_echo_destroy(void *data)
 {
 	struct echo_state *state = data;
-	for (size_t ch = 0; ch < MAX_CONTEXTS * MAX_AUDIO_CHANNELS; ++ch) {
-		if (state->ch_state[ch])
-			bfree(state->ch_state[ch]->cbuf);
-			bfree(state->ch_state[ch]);
-	}
 	bfree(state);
 }
 
@@ -69,9 +64,10 @@ void stir_echo_update(void *data, obs_data_t *settings)
 		for (size_t c = 0; c < ctx_c->length; ++c) {
 			for (size_t ch = 0; ch < state->channels; ++ch) {
 				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
+				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
 				size_t index = id * state->channels + ch;
 				char key[24];
-				snprintf(key, sizeof(key), "%u_echo_ch_%zu", id, ch % 8u);
+				snprintf(key, sizeof(key), "%s_echo_ch_%zu", cid, ch % 8u);
 				if (obs_data_get_bool(settings, key)) {
 					state->mask |= (1 << index);
 					if (!state->ch_state[index]) {
@@ -147,13 +143,22 @@ void stir_echo_add(void *data, obs_source_t *source)
 {
 	struct echo_state *state = data;
 	state->parent = source;
-	stir_echo_update(state, obs_source_get_settings(state->context));
+	obs_data_t *settings = obs_source_get_settings(state->context);
+	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
+	stir_echo_update(state, settings_safe);
+	obs_data_release(settings_safe);
+	obs_data_release(settings);
 	stir_register_filter(source, "echo", state->context, process_audio, state);
 }
 
 void stir_echo_remove(void *data, obs_source_t *source)
 {
 	struct echo_state *state = data;
+	for (size_t ch = 0; ch < MAX_CONTEXTS * MAX_AUDIO_CHANNELS; ++ch) {
+		if (state->ch_state[ch])
+			bfree(state->ch_state[ch]->cbuf);
+		bfree(state->ch_state[ch]);
+	}
 	stir_unregister_filter(source, state->context);
 }
 

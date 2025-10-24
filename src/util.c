@@ -39,9 +39,9 @@ void filter_make_ch_list(obs_properties_t *props, obs_source_t *source, const ch
 		for (size_t c = 0; c < ctx_c->length; ++c) {
 			obs_properties_t *cur_ch = obs_properties_create();
 			for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
+				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
 				char key[24];
-				snprintf(key, sizeof(key), "%u_%s_ch_%zu", id, fid, k % 8u);
+				snprintf(key, sizeof(key), "%s_%s_ch_%zu", cid, fid, k % 8u);
 				char desc[24];
 				snprintf(desc, sizeof(desc), "%s Channel %zu", stir_ctx_get_disp(ctx_c->ctx[c]),
 					 (k + 1) % 9u);
