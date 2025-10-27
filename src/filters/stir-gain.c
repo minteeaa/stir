@@ -6,10 +6,10 @@
 #include "stir-context.h"
 #include "chain.h"
 #include "util.h"
+#include "filters/common.h"
 
 struct gain_state {
-	obs_source_t *context;
-	obs_source_t *parent;
+	struct filter_base base;
 
 	float gain;
 	uint32_t mask;
@@ -32,7 +32,7 @@ void stir_gain_update(void *data, obs_data_t *settings)
 {
 	struct gain_state *state = data;
 	state->gain = db_to_mul((float)obs_data_get_double(settings, "gain"));
-	context_collection_t *ctx_c = stir_ctx_c_find(state->parent);
+	context_collection_t *ctx_c = stir_ctx_c_find(state->base.parent);
 
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
@@ -55,7 +55,7 @@ void *stir_gain_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct gain_state *state = bzalloc(sizeof(struct gain_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
-	state->context = source;
+	state->base.context = source;
 	stir_gain_update(state, settings);
 	return state;
 }
@@ -77,19 +77,20 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 void stir_gain_add(void *data, obs_source_t *source)
 {
 	struct gain_state *state = data;
-	state->parent = source;
-	obs_data_t *settings = obs_source_get_settings(state->context);
+	state->base.parent = source;
+	state->base.ui_id = "gain";
+	obs_data_t *settings = obs_source_get_settings(state->base.context);
 	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
 	stir_gain_update(state, settings_safe);
 	obs_data_release(settings_safe);
 	obs_data_release(settings);
-	stir_register_filter(source, "gain", state->context, process_audio, state);
+	stir_register_filter(source, "gain", state->base.context, process_audio, state);
 }
 
 void stir_gain_remove(void *data, obs_source_t *source)
 {
 	struct gain_state *state = data;
-	stir_unregister_filter(source, state->context);
+	stir_unregister_filter(source, state->base.context);
 }
 
 obs_properties_t *stir_gain_properties(void *data)
@@ -97,7 +98,8 @@ obs_properties_t *stir_gain_properties(void *data)
 	struct gain_state *state = data;
 	obs_properties_t *props = obs_properties_create();
 
-	filter_make_ch_list(props, state->parent, "gain");
+	filter_make_ctx_dropdown(props, &state->base);
+	filter_make_ch_list(props, &state->base);
 
 	obs_property_t *p = obs_properties_add_float_slider(props, "gain", "Gain Amount", -30.0, 30.0, 0.1);
 	obs_property_float_set_suffix(p, " dB");

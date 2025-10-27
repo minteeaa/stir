@@ -6,6 +6,7 @@
 #include <plugin-support.h>
 
 #include "filters/stir-tremolo.h"
+#include "filters/common.h"
 #include "stir-context.h"
 #include "chain.h"
 #include "util.h"
@@ -16,8 +17,7 @@ struct channel_variables {
 };
 
 struct tremolo_state {
-	obs_source_t *context;
-	obs_source_t *parent;
+	struct filter_base base;
 
 	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
 	float rate;
@@ -53,7 +53,7 @@ void stir_tremolo_update(void *data, obs_data_t *settings)
 	state->wetmix = (float)obs_data_get_double(settings, "tremolo_wet_mix");
 	state->drymix = (float)obs_data_get_double(settings, "tremolo_dry_mix");
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-	context_collection_t *ctx_c = stir_ctx_c_find(state->parent);
+	context_collection_t *ctx_c = stir_ctx_c_find(state->base.parent);
 
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
@@ -85,7 +85,7 @@ void *stir_tremolo_create(obs_data_t *settings, obs_source_t *source)
 	UNUSED_PARAMETER(settings);
 	struct tremolo_state *state = bzalloc(sizeof(struct tremolo_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
-	state->context = source;
+	state->base.context = source;
 	return state;
 }
 
@@ -121,19 +121,20 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 void stir_tremolo_add(void *data, obs_source_t *source)
 {
 	struct tremolo_state *state = data;
-	state->parent = source;
-	obs_data_t *settings = obs_source_get_settings(state->context);
+	state->base.parent = source;
+	state->base.ui_id = "lfo";
+	obs_data_t *settings = obs_source_get_settings(state->base.context);
 	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
 	stir_tremolo_update(state, settings_safe);
 	obs_data_release(settings_safe);
 	obs_data_release(settings);
-	stir_register_filter(source, "tremolo", state->context, process_audio, state);
+	stir_register_filter(source, "tremolo", state->base.context, process_audio, state);
 }
 
 void stir_tremolo_remove(void *data, obs_source_t *source)
 {
 	struct tremolo_state *state = data;
-	stir_unregister_filter(source, state->context);
+	stir_unregister_filter(source, state->base.context);
 }
 
 obs_properties_t *stir_tremolo_properties(void *data)
@@ -141,7 +142,8 @@ obs_properties_t *stir_tremolo_properties(void *data)
 	struct tremolo_state *state = data;
 	obs_properties_t *props = obs_properties_create();
 
-	filter_make_ch_list(props, state->parent, "lfo");
+	filter_make_ctx_dropdown(props, &state->base);
+	filter_make_ch_list(props, &state->base);
 
 	obs_property_t *r = obs_properties_add_float_slider(props, "tremolo_rate", "Rate", 0.0, 20.0, 0.1);
 	obs_property_t *d = obs_properties_add_float_slider(props, "tremolo_depth", "Depth", 0.0, 100.0, 0.5);
@@ -151,6 +153,7 @@ obs_properties_t *stir_tremolo_properties(void *data)
 	obs_property_float_set_suffix(wm, "x");
 	obs_property_t *dm = obs_properties_add_float_slider(props, "tremolo_dry_mix", "Dry Mix", 0.0, 1.0, 0.01);
 	obs_property_float_set_suffix(dm, "x");
+
 	return props;
 }
 

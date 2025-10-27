@@ -10,6 +10,7 @@
 #include "stir-context.h"
 #include "chain.h"
 #include "util.h"
+#include "filters/common.h"
 #include "util/bmem.h"
 #include "util/c99defs.h"
 
@@ -22,8 +23,7 @@ struct channel_variables {
 };
 
 struct echo_state {
-	obs_source_t *context;
-	obs_source_t *parent;
+	struct filter_base base;
 
 	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
 
@@ -58,7 +58,7 @@ void stir_echo_update(void *data, obs_data_t *settings)
 	state->decay = (float)obs_data_get_double(settings, "echo-decay");
 	state->wet_mix = (float)obs_data_get_double(settings, "echo-wet-mix");
 	state->dry_mix = (float)obs_data_get_double(settings, "echo-dry-mix");
-	context_collection_t *ctx_c = stir_ctx_c_find(state->parent);
+	context_collection_t *ctx_c = stir_ctx_c_find(state->base.parent);
 
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
@@ -97,7 +97,8 @@ void *stir_echo_create(obs_data_t *settings, obs_source_t *source)
 	UNUSED_PARAMETER(settings);
 	struct echo_state *state = bzalloc(sizeof(struct echo_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
-	state->context = source;
+	state->base.context = source;
+	state->base.ui_id = "echo";
 	state->delay_current = 1.0f;
 	state->delay_smoothed = 1.0f;
 	max_cbuf_frames =
@@ -143,13 +144,13 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 void stir_echo_add(void *data, obs_source_t *source)
 {
 	struct echo_state *state = data;
-	state->parent = source;
-	obs_data_t *settings = obs_source_get_settings(state->context);
+	state->base.parent = source;
+	obs_data_t *settings = obs_source_get_settings(state->base.context);
 	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
 	stir_echo_update(state, settings_safe);
 	obs_data_release(settings_safe);
 	obs_data_release(settings);
-	stir_register_filter(source, "echo", state->context, process_audio, state);
+	stir_register_filter(source, "echo", state->base.context, process_audio, state);
 }
 
 void stir_echo_remove(void *data, obs_source_t *source)
@@ -160,7 +161,7 @@ void stir_echo_remove(void *data, obs_source_t *source)
 			bfree(state->ch_state[ch]->cbuf);
 		bfree(state->ch_state[ch]);
 	}
-	stir_unregister_filter(source, state->context);
+	stir_unregister_filter(source, state->base.context);
 }
 
 obs_properties_t *stir_echo_properties(void *data)
@@ -168,7 +169,8 @@ obs_properties_t *stir_echo_properties(void *data)
 	struct echo_state *state = data;
 	obs_properties_t *props = obs_properties_create();
 
-	filter_make_ch_list(props, state->parent, "echo");
+	filter_make_ctx_dropdown(props, &state->base);
+	filter_make_ch_list(props, &state->base);
 
 	obs_property_t *p = obs_properties_add_float_slider(props, "echo-delay", "Delay", 50.0, 5000.0, 1.0);
 	obs_property_float_set_suffix(p, " ms");

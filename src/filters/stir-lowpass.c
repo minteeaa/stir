@@ -8,6 +8,7 @@
 #include "stir-context.h"
 #include "chain.h"
 #include "util.h"
+#include "filters/common.h"
 
 struct channel_variables {
 	float b0, b1, b2;
@@ -17,8 +18,7 @@ struct channel_variables {
 };
 
 struct lowpass_state {
-	obs_source_t *context;
-	obs_source_t *parent;
+	struct filter_base base;
 
 	float cutoff, q;
 	float wetmix, drymix;
@@ -93,7 +93,7 @@ void stir_lowpass_update(void *data, obs_data_t *settings)
 	state->q = (float)obs_data_get_double(settings, "lp_q");
 	state->cutoff = (float)obs_data_get_double(settings, "lp_cutoff_freq");
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-	context_collection_t *ctx_c = stir_ctx_c_find(state->parent);
+	context_collection_t *ctx_c = stir_ctx_c_find(state->base.parent);
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
 			for (size_t ch = 0; ch < state->channels; ++ch) {
@@ -127,7 +127,7 @@ void *stir_lowpass_create(obs_data_t *settings, obs_source_t *source)
 	UNUSED_PARAMETER(settings);
 	struct lowpass_state *state = bzalloc(sizeof(struct lowpass_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
-	state->context = source;
+	state->base.context = source;
 	return state;
 }
 
@@ -151,19 +151,20 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 void stir_lowpass_add(void *data, obs_source_t *source)
 {
 	struct lowpass_state *state = data;
-	state->parent = source;
-	obs_data_t *settings = obs_source_get_settings(state->context);
+	state->base.parent = source;
+	state->base.ui_id = "lp";
+	obs_data_t *settings = obs_source_get_settings(state->base.context);
 	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
 	stir_lowpass_update(state, settings_safe);
 	obs_data_release(settings_safe);
 	obs_data_release(settings);
-	stir_register_filter(source, "lowpass", state->context, process_audio, state);
+	stir_register_filter(source, "lowpass", state->base.context, process_audio, state);
 }
 
 void stir_lowpass_remove(void *data, obs_source_t *source)
 {
 	struct lowpass_state *state = data;
-	stir_unregister_filter(source, state->context);
+	stir_unregister_filter(source, state->base.context);
 }
 
 obs_properties_t *stir_lowpass_properties(void *data)
@@ -171,7 +172,8 @@ obs_properties_t *stir_lowpass_properties(void *data)
 	struct lowpass_state *state = data;
 	obs_properties_t *props = obs_properties_create();
 
-	filter_make_ch_list(props, state->parent, "lp");
+	filter_make_ctx_dropdown(props, &state->base);
+	filter_make_ch_list(props, &state->base);
 
 	obs_property_t *lf = obs_properties_add_float_slider(props, "lp_cutoff_freq", "Cutoff", 10.0, 2000.0, 1.0);
 	obs_property_float_set_suffix(lf, " Hz");

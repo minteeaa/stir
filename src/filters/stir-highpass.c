@@ -8,6 +8,7 @@
 #include "stir-context.h"
 #include "chain.h"
 #include "util.h"
+#include "filters/common.h"
 
 struct channel_variables {
 	float b0, b1, b2;
@@ -17,8 +18,7 @@ struct channel_variables {
 };
 
 struct highpass_state {
-	obs_source_t *context;
-	obs_source_t *parent;
+	struct filter_base base;
 
 	float cutoff, q;
 	float wetmix, drymix;
@@ -93,7 +93,7 @@ void stir_highpass_update(void *data, obs_data_t *settings)
 	state->q = (float)obs_data_get_double(settings, "hp_q");
 	state->cutoff = (float)obs_data_get_double(settings, "hp_cutoff_freq");
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-	context_collection_t *ctx_c = stir_ctx_c_find(state->parent);
+	context_collection_t *ctx_c = stir_ctx_c_find(state->base.parent);
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
 			for (size_t ch = 0; ch < state->channels; ++ch) {
@@ -127,7 +127,7 @@ void *stir_highpass_create(obs_data_t *settings, obs_source_t *source)
 	UNUSED_PARAMETER(settings);
 	struct highpass_state *state = bzalloc(sizeof(struct highpass_state));
 	state->channels = audio_output_get_channels(obs_get_audio());
-	state->context = source;
+	state->base.context = source;
 	return state;
 }
 
@@ -151,19 +151,20 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 void stir_highpass_add(void *data, obs_source_t *source)
 {
 	struct highpass_state *state = data;
-	state->parent = source;
-	obs_data_t *settings = obs_source_get_settings(state->context);
+	state->base.parent = source;
+	state->base.ui_id = "hp";
+	obs_data_t *settings = obs_source_get_settings(state->base.context);
 	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
 	stir_highpass_update(state, settings_safe);
 	obs_data_release(settings_safe);
 	obs_data_release(settings);
-	stir_register_filter(source, "highpass", state->context, process_audio, state);
+	stir_register_filter(source, "highpass", state->base.context, process_audio, state);
 }
 
 void stir_highpass_remove(void *data, obs_source_t *source)
 {
 	struct highpass_state *state = data;
-	stir_unregister_filter(source, state->context);
+	stir_unregister_filter(source, state->base.context);
 }
 
 obs_properties_t *stir_highpass_properties(void *data)
@@ -171,7 +172,8 @@ obs_properties_t *stir_highpass_properties(void *data)
 	struct highpass_state *state = data;
 	obs_properties_t *props = obs_properties_create();
 
-	filter_make_ch_list(props, state->parent, "hp");
+	filter_make_ctx_dropdown(props, &state->base);
+	filter_make_ch_list(props, &state->base);
 
 	obs_property_t *cf = obs_properties_add_float_slider(props, "hp_cutoff_freq", "Cutoff", 100.0, 2500.0, 1.0);
 	obs_property_float_set_suffix(cf, " Hz");
