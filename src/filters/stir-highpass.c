@@ -7,7 +7,6 @@
 #include "filters/stir-highpass.h"
 #include "stir-context.h"
 #include "chain.h"
-#include "util.h"
 #include "filters/common.h"
 
 struct channel_variables {

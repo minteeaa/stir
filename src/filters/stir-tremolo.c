@@ -9,7 +9,6 @@
 #include "filters/common.h"
 #include "stir-context.h"
 #include "chain.h"
-#include "util.h"
 #include "util/c99defs.h"
 
 struct channel_variables {

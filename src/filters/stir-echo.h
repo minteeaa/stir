@@ -1,6 +1,6 @@
 #pragma once
 
-#include <obs-frontend-api.h>
+#include <obs-module.h>
 
 const char *stir_echo_get_name(void *data);
 void *stir_echo_create(obs_data_t *settings, obs_source_t *source);

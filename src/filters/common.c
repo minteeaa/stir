@@ -3,13 +3,14 @@
 
 #include "stir-context.h"
 #include "obs-properties.h"
-#include "plugin-support.h"
+#include "util/c99defs.h"
 #include "filters/common.h"
 
 /* TODO: add method for setting defaults */
 
-static bool update_ch_list_vis(void *priv, obs_properties_t *props, obs_property_t *property, obs_data_t *settings) 
+static bool update_ch_list_vis(void *priv, obs_properties_t *props, obs_property_t *property, obs_data_t *settings)
 {
+	UNUSED_PARAMETER(property);
 	struct filter_base *data = priv;
 	context_collection_t *ctx_c = stir_ctx_c_find(data->parent);
 	if (ctx_c) {
