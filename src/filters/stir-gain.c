@@ -53,9 +53,11 @@ void stir_gain_update(void *data, obs_data_t *settings)
 void *stir_gain_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct gain_state *state = bzalloc(sizeof(struct gain_state));
+	state->base.ui_id = "gain";
 	state->channels = audio_output_get_channels(obs_get_audio());
 	state->base.context = source;
 	stir_gain_update(state, settings);
+	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
 }
 
@@ -77,7 +79,6 @@ void stir_gain_add(void *data, obs_source_t *source)
 {
 	struct gain_state *state = data;
 	state->base.parent = source;
-	state->base.ui_id = "gain";
 	obs_data_t *settings = obs_source_get_settings(state->base.context);
 	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
 	stir_gain_update(state, settings_safe);

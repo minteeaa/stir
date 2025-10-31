@@ -103,6 +103,7 @@ void *stir_echo_create(obs_data_t *settings, obs_source_t *source)
 	state->delay_smoothed = 1.0f;
 	max_cbuf_frames =
 		(size_t)((MAX_ECHO_DELAY_MS * (float)audio_output_get_sample_rate(obs_get_audio())) / 1000.0f) + 1;
+	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
 }
 

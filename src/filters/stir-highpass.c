@@ -125,8 +125,10 @@ void *stir_highpass_create(obs_data_t *settings, obs_source_t *source)
 {
 	UNUSED_PARAMETER(settings);
 	struct highpass_state *state = bzalloc(sizeof(struct highpass_state));
+	state->base.ui_id = "lp";
 	state->channels = audio_output_get_channels(obs_get_audio());
 	state->base.context = source;
+	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
 }
 
@@ -151,7 +153,6 @@ void stir_highpass_add(void *data, obs_source_t *source)
 {
 	struct highpass_state *state = data;
 	state->base.parent = source;
-	state->base.ui_id = "hp";
 	obs_data_t *settings = obs_source_get_settings(state->base.context);
 	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
 	stir_highpass_update(state, settings_safe);

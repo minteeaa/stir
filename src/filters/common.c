@@ -1,12 +1,25 @@
+#include "filters/common.h"
 #include <stdint.h>
 #include <obs-module.h>
 
 #include "stir-context.h"
 #include "obs-properties.h"
 #include "util/c99defs.h"
-#include "filters/common.h"
 
 /* TODO: add method for setting defaults */
+
+void migrate_pre_13_config(obs_data_t *settings, const char *old_id, const char *new_id)
+{
+	for (size_t ch = 0; ch < 8; ++ch) {
+		char key[24];
+		snprintf(key, sizeof(key), "%s_ch_%zu", old_id, ch % 9u);
+		char nkey[24];
+		snprintf(nkey, sizeof(nkey), "main_%s_ch_%zu", new_id, ch % 9u);
+		bool val = obs_data_get_bool(settings, key);
+		obs_data_set_bool(settings, nkey, val);
+		obs_data_erase(settings, key);
+	}
+}
 
 static bool update_ch_list_vis(void *priv, obs_properties_t *props, obs_property_t *property, obs_data_t *settings)
 {

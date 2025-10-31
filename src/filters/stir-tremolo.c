@@ -5,8 +5,8 @@
 #include <obs-frontend-api.h>
 #include <plugin-support.h>
 
-#include "filters/stir-tremolo.h"
 #include "filters/common.h"
+#include "filters/stir-tremolo.h"
 #include "stir-context.h"
 #include "chain.h"
 #include "util/c99defs.h"
@@ -81,10 +81,11 @@ void stir_tremolo_update(void *data, obs_data_t *settings)
 
 void *stir_tremolo_create(obs_data_t *settings, obs_source_t *source)
 {
-	UNUSED_PARAMETER(settings);
 	struct tremolo_state *state = bzalloc(sizeof(struct tremolo_state));
+	state->base.ui_id = "lfo";
 	state->channels = audio_output_get_channels(obs_get_audio());
 	state->base.context = source;
+	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
 }
 
@@ -121,7 +122,6 @@ void stir_tremolo_add(void *data, obs_source_t *source)
 {
 	struct tremolo_state *state = data;
 	state->base.parent = source;
-	state->base.ui_id = "lfo";
 	obs_data_t *settings = obs_source_get_settings(state->base.context);
 	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
 	stir_tremolo_update(state, settings_safe);
