@@ -1,6 +1,8 @@
 #include "filters/common.h"
+#include <stdio.h>
 #include <stdint.h>
 #include <obs-module.h>
+#include <plugin-support.h>
 
 #include "stir-context.h"
 #include "obs-properties.h"
@@ -16,8 +18,10 @@ void migrate_pre_13_config(obs_data_t *settings, const char *old_id, const char 
 		char nkey[24];
 		snprintf(nkey, sizeof(nkey), "main_%s_ch_%zu", new_id, ch % 9u);
 		bool val = obs_data_get_bool(settings, key);
-		obs_data_set_bool(settings, nkey, val);
-		obs_data_erase(settings, key);
+		if (obs_data_has_user_value(settings, key)) {
+			obs_data_set_bool(settings, nkey, val);
+			obs_data_erase(settings, key);
+		}
 	}
 }
 
@@ -33,7 +37,7 @@ static bool update_ch_list_vis(void *priv, obs_properties_t *props, obs_property
 			snprintf(trc, sizeof(trc), "%s_%s_channels", stir_ctx_get_id(ctx_c->ctx[c]), data->ui_id);
 			obs_property_t *target = obs_properties_get(props, trc);
 			const char *fil = obs_data_get_string(settings, "ch_fil");
-			char ie[14];
+			char ie[14] = {'\0'};
 			snprintf(ie, sizeof(ie), "ch_g_%s", cid);
 			if (strcmp(ie, fil) == 0) {
 				obs_property_set_visible(target, true);
@@ -67,7 +71,7 @@ void filter_make_ch_list(obs_properties_t *props, struct filter_base *data)
 			snprintf(grc, sizeof(grc), "%s_%s_channels", stir_ctx_get_id(ctx_c->ctx[c]), data->ui_id);
 			obs_property_t *target = obs_properties_add_group(props, grc, disp, OBS_GROUP_NORMAL, cur_ch);
 			const char *fil = obs_data_get_string(settings_safe, "ch_fil");
-			char ie[14];
+			char ie[14] = {'\0'};
 			snprintf(ie, sizeof(ie), "ch_g_%s", cid);
 			if (strcmp(ie, fil) == 0) {
 				obs_property_set_visible(target, true);

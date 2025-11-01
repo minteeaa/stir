@@ -50,8 +50,7 @@ void chain_map_remove(obs_source_t *source)
 	}
 }
 
-void stir_register_filter(obs_source_t *source, const char *type_name, void *instance, filter_process_fn fn,
-			  void *userdata)
+void stir_register_filter(obs_source_t *source, const char *type_name, void *instance, filter_process_fn fn, void *userdata)
 {
 	UNUSED_PARAMETER(type_name);
 	filter_chain_t *chain = chain_map_find(source);
