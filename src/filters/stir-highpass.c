@@ -154,7 +154,7 @@ void stir_highpass_add(void *data, obs_source_t *source)
 	struct highpass_state *state = data;
 	state->base.parent = source;
 	obs_data_t *settings = obs_source_get_settings(state->base.context);
-	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
+	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json_with_defaults(settings));
 	stir_highpass_update(state, settings_safe);
 	obs_data_release(settings_safe);
 	obs_data_release(settings);
