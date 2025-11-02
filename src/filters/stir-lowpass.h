@@ -1,6 +1,6 @@
 #pragma once
 
-#include <obs-module.h>
+#include <obs/obs.h>
 
 const char *stir_lowpass_get_name(void *data);
 void *stir_lowpass_create(obs_data_t *settings, obs_source_t *source);
