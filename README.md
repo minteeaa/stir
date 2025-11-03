@@ -18,6 +18,11 @@ STIR aims to be an easy-to-approach solution for virtual upmixing of 2-channel s
 
 the primary inspiration for this project comes from VRChat's [ongoing lack of audio filter support](https://feedback.vrchat.com/sdk-bug-reports/p/proposal-for-fixing-audio-filters-eg-low-pass-support-for-avpro), but can be expanded to any valid usage case within OBS.
 
+### usage
+*the info, the guide*
+
+refer to the [wiki](https://codeberg.org/mintea/stir/wiki) for setup and usage.
+
 ### supported environments
 *versions n' stuff*
 
@@ -30,6 +35,8 @@ Arch Linux has been tested. other distros *should* be supported by default. ther
 | windows x64 | supported   |
 | linux       | supported   |
 | macOS       | unsupported |
+
+> Arch Linux has been tested. other distros *should* be supported by default. there are no current plans to support macOS.
 
 ### credits
 *friends who contributed directly and indirectly to this project*

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <obs-frontend-api.h>
+#include "obs.h"
 
 const char *stir_gain_get_name(void *data);
 void *stir_gain_create(obs_data_t *settings, obs_source_t *source);

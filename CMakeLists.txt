@@ -37,6 +37,8 @@ endif()
 target_sources(
   ${CMAKE_PROJECT_NAME}
   PRIVATE
+    src/filters/common.c
+    src/filters/common.h
     src/filters/stir-echo.c
     src/filters/stir-echo.h
     src/filters/stir-gain.c

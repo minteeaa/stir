@@ -3,25 +3,28 @@
 #include <stdio.h>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
+#include <plugin-support.h>
 
+#include "filters/common.h"
 #include "filters/stir-tremolo.h"
 #include "stir-context.h"
 #include "chain.h"
+#include "util/c99defs.h"
 
 struct channel_variables {
 	float phase;
 };
 
 struct tremolo_state {
-	obs_source_t *context;
+	struct filter_base base;
 
-	struct channel_variables channel_state[MAX_AUDIO_CHANNELS];
+	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
 	float rate;
 	float depth;
 	float wetmix, drymix;
 
 	float sample_rate;
-	uint8_t mask;
+	uint32_t mask;
 	size_t channels;
 };
 
@@ -34,6 +37,10 @@ const char *stir_tremolo_get_name(void *data)
 void stir_tremolo_destroy(void *data)
 {
 	struct tremolo_state *state = data;
+	for (size_t ch = 0; ch < MAX_CONTEXTS * MAX_AUDIO_CHANNELS; ++ch) {
+		if (state->ch_state[ch])
+			bfree(state->ch_state[ch]);
+	}
 	bfree(state);
 }
 
@@ -45,13 +52,29 @@ void stir_tremolo_update(void *data, obs_data_t *settings)
 	state->wetmix = (float)obs_data_get_double(settings, "tremolo_wet_mix");
 	state->drymix = (float)obs_data_get_double(settings, "tremolo_dry_mix");
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-	for (size_t ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
-		char key[11];
-		snprintf(key, sizeof(key), "lfo_ch_%zu", ch % 6u);
-		if (obs_data_get_bool(settings, key)) {
-			state->mask |= (1 << ch);
-		} else {
-			state->mask &= ~(1 << ch);
+	context_collection_t *ctx_c = stir_ctx_c_find(state->base.parent);
+
+	if (ctx_c) {
+		for (size_t c = 0; c < ctx_c->length; ++c) {
+			for (size_t ch = 0; ch < state->channels; ++ch) {
+				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
+				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
+				size_t index = id * state->channels + ch;
+				char key[24];
+				snprintf(key, sizeof(key), "%s_lfo_ch_%zu", cid, ch % 8u);
+				if (obs_data_get_bool(settings, key)) {
+					state->mask |= (1 << index);
+					if (!state->ch_state[index]) {
+						state->ch_state[index] = bzalloc(sizeof(struct channel_variables));
+					}
+				} else {
+					state->mask &= ~(1 << index);
+					if (state->ch_state[index]) {
+						bfree(state->ch_state[index]);
+						state->ch_state[index] = NULL;
+					}
+				}
+			}
 		}
 	}
 }
@@ -59,9 +82,10 @@ void stir_tremolo_update(void *data, obs_data_t *settings)
 void *stir_tremolo_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct tremolo_state *state = bzalloc(sizeof(struct tremolo_state));
+	state->base.ui_id = "lfo";
 	state->channels = audio_output_get_channels(obs_get_audio());
-	state->context = source;
-	stir_tremolo_update(state, settings);
+	state->base.context = source;
+	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
 }
 
@@ -81,10 +105,12 @@ float tremolo(struct tremolo_state *state, struct channel_variables *vars, float
 static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect)
 {
 	struct tremolo_state *state = (struct tremolo_state *)userdata;
-	float *buf = stir_get_buf(ctx);
+	float *buf = stir_ctx_get_buf(ctx);
+	uint8_t id = stir_ctx_get_num_id(ctx);
 	for (size_t i = 0; i < state->channels; ++i) {
-		if (state->mask & (1 << i)) {
-			struct channel_variables *channel_vars = &state->channel_state[i];
+		size_t index = id * state->channels + i;
+		if (state->mask & (1 << index)) {
+			struct channel_variables *channel_vars = state->ch_state[index];
 			for (size_t fr = 0; fr < samplect; ++fr) {
 				buf[i * samplect + fr] = tremolo(state, channel_vars, buf[i * samplect + fr]);
 			}
@@ -95,28 +121,28 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 void stir_tremolo_add(void *data, obs_source_t *source)
 {
 	struct tremolo_state *state = data;
-	stir_register_filter(source, "tremolo", state->context, process_audio, state);
+	state->base.parent = source;
+	obs_data_t *settings = obs_source_get_settings(state->base.context);
+	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json_with_defaults(settings));
+	stir_tremolo_update(state, settings_safe);
+	obs_data_release(settings_safe);
+	obs_data_release(settings);
+	stir_register_filter(source, "tremolo", state->base.context, process_audio, state);
 }
 
 void stir_tremolo_remove(void *data, obs_source_t *source)
 {
 	struct tremolo_state *state = data;
-	stir_unregister_filter(source, state->context);
+	stir_unregister_filter(source, state->base.context);
 }
 
 obs_properties_t *stir_tremolo_properties(void *data)
 {
-	UNUSED_PARAMETER(data);
+	struct tremolo_state *state = data;
 	obs_properties_t *props = obs_properties_create();
-	obs_properties_t *tremolo_channels = obs_properties_create();
-	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[11];
-		snprintf(id, sizeof(id), "lfo_ch_%zu", k % 6u);
-		char desc[12];
-		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 7u);
-		obs_properties_add_bool(tremolo_channels, id, desc);
-	}
-	obs_properties_add_group(props, "tremolo_channels", "Channels", OBS_GROUP_NORMAL, tremolo_channels);
+
+	filter_make_ctx_dropdown(props, &state->base);
+	filter_make_ch_list(props, &state->base);
 
 	obs_property_t *r = obs_properties_add_float_slider(props, "tremolo_rate", "Rate", 0.0, 20.0, 0.1);
 	obs_property_t *d = obs_properties_add_float_slider(props, "tremolo_depth", "Depth", 0.0, 100.0, 0.5);
@@ -126,16 +152,12 @@ obs_properties_t *stir_tremolo_properties(void *data)
 	obs_property_float_set_suffix(wm, "x");
 	obs_property_t *dm = obs_properties_add_float_slider(props, "tremolo_dry_mix", "Dry Mix", 0.0, 1.0, 0.01);
 	obs_property_float_set_suffix(dm, "x");
+
 	return props;
 }
 
 void stir_tremolo_defaults(obs_data_t *settings)
 {
-	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[11];
-		snprintf(id, sizeof(id), "lfo_ch_%zu", k % 6u);
-		obs_data_set_default_bool(settings, id, false);
-	}
 	obs_data_set_default_double(settings, "tremolo_rate", 4.0);
 	obs_data_set_default_double(settings, "tremolo_depth", 50.0);
 	obs_data_set_default_double(settings, "tremolo_wet_mix", 1.0);

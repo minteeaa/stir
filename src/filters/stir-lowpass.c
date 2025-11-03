@@ -7,6 +7,7 @@
 #include "filters/stir-lowpass.h"
 #include "stir-context.h"
 #include "chain.h"
+#include "filters/common.h"
 
 struct channel_variables {
 	float b0, b1, b2;
@@ -16,15 +17,15 @@ struct channel_variables {
 };
 
 struct lowpass_state {
-	obs_source_t *context;
+	struct filter_base base;
 
 	float cutoff, q;
 	float wetmix, drymix;
 
-	struct channel_variables channel_state[MAX_AUDIO_CHANNELS];
+	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
 
 	float sample_rate;
-	uint8_t mask;
+	uint32_t mask;
 	size_t channels;
 };
 
@@ -76,6 +77,10 @@ const char *stir_lowpass_get_name(void *data)
 void stir_lowpass_destroy(void *data)
 {
 	struct lowpass_state *state = data;
+	for (size_t ch = 0; ch < MAX_CONTEXTS * MAX_AUDIO_CHANNELS; ++ch) {
+		if (state->ch_state[ch])
+			bfree(state->ch_state[ch]);
+	}
 	bfree(state);
 }
 
@@ -87,37 +92,55 @@ void stir_lowpass_update(void *data, obs_data_t *settings)
 	state->q = (float)obs_data_get_double(settings, "lp_q");
 	state->cutoff = (float)obs_data_get_double(settings, "lp_cutoff_freq");
 	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-	for (size_t ch = 0; ch < MAX_AUDIO_CHANNELS; ++ch) {
-		char key[10];
-		snprintf(key, sizeof(key), "lp_ch_%zu", ch % 6u);
-		if (obs_data_get_bool(settings, key)) {
-			state->mask |= (1 << ch);
-		} else {
-			state->mask &= ~(1 << ch);
+	context_collection_t *ctx_c = stir_ctx_c_find(state->base.parent);
+	if (ctx_c) {
+		for (size_t c = 0; c < ctx_c->length; ++c) {
+			for (size_t ch = 0; ch < state->channels; ++ch) {
+				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
+				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
+				size_t index = id * state->channels + ch;
+				char key[24];
+				snprintf(key, sizeof(key), "%s_lp_ch_%zu", cid, ch % 8u);
+				if (obs_data_get_bool(settings, key)) {
+					state->mask |= (1 << index);
+					if (!state->ch_state[index]) {
+						state->ch_state[index] = bzalloc(sizeof(struct channel_variables));
+					}
+				} else {
+					state->mask &= ~(1 << index);
+					if (state->ch_state[index]) {
+						bfree(state->ch_state[index]);
+						state->ch_state[index] = NULL;
+					}
+				}
+				if (state->ch_state[index]) {
+					butterworth_calculate_lowpass(state, state->ch_state[index]);
+				}
+			}
 		}
-	}
-	for (size_t i = 0; i < state->channels; ++i) {
-		struct channel_variables *channel_vars = &state->channel_state[i];
-		butterworth_calculate_lowpass(state, channel_vars);
 	}
 }
 
 void *stir_lowpass_create(obs_data_t *settings, obs_source_t *source)
 {
+	UNUSED_PARAMETER(settings);
 	struct lowpass_state *state = bzalloc(sizeof(struct lowpass_state));
+	state->base.ui_id = "lp";
 	state->channels = audio_output_get_channels(obs_get_audio());
-	state->context = source;
-	stir_lowpass_update(state, settings);
+	state->base.context = source;
+	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
 }
 
 static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect)
 {
 	struct lowpass_state *state = (struct lowpass_state *)userdata;
-	float *buf = stir_get_buf(ctx);
+	float *buf = stir_ctx_get_buf(ctx);
+	uint8_t id = stir_ctx_get_num_id(ctx);
 	for (size_t i = 0; i < state->channels; ++i) {
-		if (state->mask & (1 << i)) {
-			struct channel_variables *channel_vars = &state->channel_state[i];
+		size_t index = id * state->channels + i;
+		if (state->mask & (1 << index)) {
+			struct channel_variables *channel_vars = state->ch_state[index];
 			for (size_t fr = 0; fr < samplect; ++fr) {
 				buf[i * samplect + fr] =
 					butterworth_lowpass(state, channel_vars, buf[i * samplect + fr]);
@@ -129,28 +152,28 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 void stir_lowpass_add(void *data, obs_source_t *source)
 {
 	struct lowpass_state *state = data;
-	stir_register_filter(source, "lowpass", state->context, process_audio, state);
+	state->base.parent = source;
+	obs_data_t *settings = obs_source_get_settings(state->base.context);
+	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json_with_defaults(settings));
+	stir_lowpass_update(state, settings_safe);
+	obs_data_release(settings_safe);
+	obs_data_release(settings);
+	stir_register_filter(source, "lowpass", state->base.context, process_audio, state);
 }
 
 void stir_lowpass_remove(void *data, obs_source_t *source)
 {
 	struct lowpass_state *state = data;
-	stir_unregister_filter(source, state->context);
+	stir_unregister_filter(source, state->base.context);
 }
 
 obs_properties_t *stir_lowpass_properties(void *data)
 {
-	UNUSED_PARAMETER(data);
+	struct lowpass_state *state = data;
 	obs_properties_t *props = obs_properties_create();
-	obs_properties_t *lowpass_channels = obs_properties_create();
-	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[10];
-		snprintf(id, sizeof(id), "lp_ch_%zu", k % 6u);
-		char desc[12];
-		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 7u);
-		obs_properties_add_bool(lowpass_channels, id, desc);
-	}
-	obs_properties_add_group(props, "lowpass_channels", "Channels", OBS_GROUP_NORMAL, lowpass_channels);
+
+	filter_make_ctx_dropdown(props, &state->base);
+	filter_make_ch_list(props, &state->base);
 
 	obs_property_t *lf = obs_properties_add_float_slider(props, "lp_cutoff_freq", "Cutoff", 10.0, 2000.0, 1.0);
 	obs_property_float_set_suffix(lf, " Hz");
@@ -165,11 +188,6 @@ obs_properties_t *stir_lowpass_properties(void *data)
 
 void stir_lowpass_defaults(obs_data_t *settings)
 {
-	for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-		char id[10];
-		snprintf(id, sizeof(id), "lp_ch_%zu", k % 6u);
-		obs_data_set_default_bool(settings, id, false);
-	}
 	obs_data_set_default_double(settings, "lp_cutoff_freq", 100.0);
 	obs_data_set_default_double(settings, "lp_q", 0.70);
 	obs_data_set_default_double(settings, "lp_wet_mix", 1.0);
