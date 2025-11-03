@@ -158,13 +158,6 @@ obs_properties_t *stir_tremolo_properties(void *data)
 
 void stir_tremolo_defaults(obs_data_t *settings)
 {
-	for (size_t c = 0; c < MAX_CONTEXTS; ++c) {
-		for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-			char id[11];
-			snprintf(id, sizeof(id), "%zu_lfo_ch_%zu", c, k % 8u);
-			obs_data_set_default_bool(settings, id, false);
-		}
-	}
 	obs_data_set_default_double(settings, "tremolo_rate", 4.0);
 	obs_data_set_default_double(settings, "tremolo_depth", 50.0);
 	obs_data_set_default_double(settings, "tremolo_wet_mix", 1.0);

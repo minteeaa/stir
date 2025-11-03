@@ -107,13 +107,6 @@ obs_properties_t *stir_gain_properties(void *data)
 
 void stir_gain_defaults(obs_data_t *settings)
 {
-	for (size_t c = 0; c < MAX_CONTEXTS; ++c) {
-		for (size_t k = 0; k < audio_output_get_channels(obs_get_audio()); ++k) {
-			char id[12];
-			snprintf(id, sizeof(id), "%zu_gain_ch_%zu", c, k % 6u);
-			obs_data_set_default_bool(settings, id, false);
-		}
-	}
 	obs_data_set_default_double(settings, "gain", 0.0);
 }
 
