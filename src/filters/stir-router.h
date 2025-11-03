@@ -1,6 +1,6 @@
 #pragma once
 
-#include <obs/obs.h>
+#include "obs.h"
 
 const char *stir_router_get_name(void *data);
 const char *virtual_source_get_name(void *data);
