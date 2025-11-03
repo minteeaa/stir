@@ -39,6 +39,8 @@ static bool update_ch_list_vis(void *priv, obs_properties_t *props, obs_property
 			snprintf(ie, sizeof(ie), "ch_g_%s", cid);
 			if (strcmp(ie, fil) == 0) {
 				obs_property_set_visible(target, true);
+			} else if (strcmp("ch_g_none", fil) == 0) {
+				obs_property_set_visible(target, true);
 			} else {
 				obs_property_set_visible(target, false);
 			}
