@@ -32,7 +32,9 @@
     },
     {
       "name": "macos-ci",
-      "inherits": [ "macos" ],
+      "inherits": [
+        "macos"
+      ],
       "displayName": "macOS Universal CI build",
       "description": "Build for macOS 11.0+ (Universal binary) for CI",
       "generator": "Xcode",
@@ -65,7 +67,9 @@
     },
     {
       "name": "windows-ci-x64",
-      "inherits": [ "windows-x64" ],
+      "inherits": [
+        "windows-x64"
+      ],
       "displayName": "Windows x64 CI build",
       "description": "Build for Windows x64 on CI",
       "cacheVariables": {
@@ -91,12 +95,15 @@
         "QT_VERSION": "6",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "ENABLE_FRONTEND_API": false,
-        "ENABLE_QT": false
+        "ENABLE_QT": false,
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
       }
     },
     {
       "name": "linux-ci-x86_64",
-      "inherits": [ "linux-x86_64" ],
+      "inherits": [
+        "linux-x86_64"
+      ],
       "displayName": "Linux x86_64 CI build",
       "description": "Build for Linux x86_64 on CI",
       "cacheVariables": {
@@ -128,7 +135,9 @@
     },
     {
       "name": "linux-ci-aarch64",
-      "inherits": [ "linux-aarch64" ],
+      "inherits": [
+        "linux-aarch64"
+      ],
       "displayName": "Linux aarch64 CI build",
       "description": "Build for Linux aarch64 on CI",
       "cacheVariables": {
