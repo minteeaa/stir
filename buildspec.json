@@ -41,8 +41,5 @@
     "version": "1.3.0",
     "author": "mintea",
     "website": "https://mintea.pw",
-    "email": "me@mintea.pw",
-    "uuids": {
-        "windowsApp": "00000000-0000-0000-0000-000000000000"
-    }
+    "email": "me@mintea.pw"
 }
