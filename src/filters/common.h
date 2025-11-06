@@ -1,7 +1,5 @@
 #pragma once
 
-#include <obs-module.h>
-#include "obs-properties.h"
 #include "obs.h"
 
 struct filter_base {
