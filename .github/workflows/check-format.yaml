@@ -1,27 +1,27 @@
-name: Check Code Formatting
+name: Check Code Formatting 
 on:
   workflow_call:
 jobs:
   clang-format:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: clang-format check
+      - name: clang-format check 
         id: clang-format
         uses: ./.github/actions/run-clang-format
         with:
           failCondition: error
 
-  gersemi:
-    runs-on: ubuntu-24.04
+  cmake-format:
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: gersemi Check
-        id: gersemi
-        uses: ./.github/actions/run-gersemi
+      - name: cmake-format check 
+        id: cmake-format
+        uses: ./.github/actions/run-cmake-format
         with:
           failCondition: error
