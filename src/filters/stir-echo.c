@@ -149,13 +149,13 @@ void stir_echo_add(void *data, obs_source_t *source)
 	obs_data_t *settings = obs_source_get_settings(state->base.context);
 	obs_data_t *defaults = obs_data_get_defaults(settings);
 	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
-	obs_data_t *defaults_safe = obs_data_create_from_json(obs_data_get_json(defaults));
-	obs_data_apply(defaults, settings_safe);
-	stir_echo_update(state, settings_safe);
+	obs_data_t *config = obs_data_create_from_json(obs_data_get_json(defaults));
+	obs_data_apply(config, settings_safe);
+	stir_echo_update(state, config);
 	obs_data_release(settings_safe);
 	obs_data_release(settings);
-	obs_data_release(defaults_safe);
 	obs_data_release(defaults);
+	obs_data_release(config);
 	stir_register_filter(source, "echo", state->base.context, process_audio, state);
 }
 
