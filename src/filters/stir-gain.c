@@ -79,7 +79,9 @@ void stir_gain_add(void *data, obs_source_t *source)
 	struct gain_state *state = data;
 	state->base.parent = source;
 	obs_data_t *settings = obs_source_get_settings(state->base.context);
-	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json_with_defaults(settings));
+	obs_data_t *defaults = obs_data_get_defaults(settings);
+	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
+	obs_data_apply(defaults, settings_safe);
 	stir_gain_update(state, settings_safe);
 	obs_data_release(settings_safe);
 	obs_data_release(settings);
