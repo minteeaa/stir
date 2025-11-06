@@ -1,5 +1,5 @@
-name: Push to master
-run-name: ${{ github.ref_name }} push run 
+name: Push
+run-name: ${{ github.ref_name }} push run
 on:
   push:
     paths-ignore:
@@ -12,37 +12,34 @@ on:
       - '*'
 permissions:
   contents: write
-concurrency:
-  group: '${{ github.workflow }} @ ${{ github.ref }}'
-  cancel-in-progress: ${{ github.ref_type == 'tag' }}
 jobs:
   check-format:
-    name: Check Formatting 
-    if: github.ref_name == 'master'
+    name: Check Formatting
+    if: github.ref_name == 'master' || github.ref_name == 'main'
     uses: ./.github/workflows/check-format.yaml
     permissions:
       contents: read
 
   build-project:
-    name: Build Project 
+    name: Build Project
     uses: ./.github/workflows/build-project.yaml
     secrets: inherit
     permissions:
       contents: read
 
   create-release:
-    name: Create Release 
+    name: Create Release
     if: github.ref_type == 'tag'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: build-project
     defaults:
       run:
         shell: bash
     steps:
-      - name: Check Release Tag 
+      - name: Check Release Tag
         id: check
         run: |
-          : Check Release Tag 
+          : Check Release Tag
           if [[ "${RUNNER_DEBUG}" ]]; then set -x; fi
           shopt -s extglob
 
@@ -60,15 +57,15 @@ jobs:
             *) echo 'validTag=false' >> $GITHUB_OUTPUT ;;
           esac
 
-      - name: Download Build Artifacts 
-        uses: actions/download-artifact@v3
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
         if: fromJSON(steps.check.outputs.validTag)
         id: download
 
-      - name: Rename Files 
+      - name: Rename Files
         if: fromJSON(steps.check.outputs.validTag)
         run: |
-          : Rename Files 
+          : Rename Files
           if [[ "${RUNNER_DEBUG}" ]]; then set -x; fi
           shopt -s extglob
           shopt -s nullglob
@@ -79,7 +76,7 @@ jobs:
           variants=(
             'windows-x64;zip|exe'
             'macos-universal;tar.xz|pkg'
-            'ubuntu-22.04-x86_64;tar.xz|deb|ddeb'
+            'ubuntu-24.04-x86_64;tar.xz|deb|ddeb'
             'sources;tar.xz'
           )
 
@@ -93,10 +90,10 @@ jobs:
             done
           done
 
-      - name: Generate Checksums 
+      - name: Generate Checksums
         if: fromJSON(steps.check.outputs.validTag)
         run: |
-          : Generate Checksums 
+          : Generate Checksums
           if [[ "${RUNNER_DEBUG}" ]]; then set -x; fi
           shopt -s extglob
 
@@ -105,10 +102,10 @@ jobs:
             echo "    ${file##*/}: $(sha256sum "${file}" | cut -d " " -f 1)" >> ${{ github.workspace }}/CHECKSUMS.txt
           done
 
-      - name: Create Release 
+      - name: Create Release
         if: fromJSON(steps.check.outputs.validTag)
         id: create_release
-        uses: softprops/action-gh-release@d4e8205d7e959a9107da6396278b2f1f07af0f9b
+        uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564
         with:
           draft: true
           prerelease: ${{ fromJSON(steps.check.outputs.prerelease) }}
