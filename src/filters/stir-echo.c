@@ -110,6 +110,7 @@ void *stir_echo_create(obs_data_t *settings, obs_source_t *source)
 float echo(float in, struct channel_variables *ch, struct echo_state *state)
 {
 	float out = 0.0f;
+	float wet = 0.0f;
 	state->delay_smoothed = interpexp(state->delay_smoothed, state->delay_target, SMOOTHING_COEFFICIENT);
 
 	if (fabsf(state->delay_smoothed - state->delay_target) < 20.0f) {
@@ -118,13 +119,15 @@ float echo(float in, struct channel_variables *ch, struct echo_state *state)
 	size_t delay_samples = (size_t)state->delay_current;
 	size_t read = (ch->write + max_cbuf_frames - delay_samples) % max_cbuf_frames;
 
-	out = ch->cbuf[read];
-	float wet = (in * state->dry_mix) + ((out * state->decay) * state->wet_mix);
+	float sample = ch->cbuf[read];
+	wet = sample * state->decay;
+	float write_sample = in + wet;
+	out = (in * state->dry_mix) + (wet * state->wet_mix);
 
-	ch->cbuf[ch->write] = wet;
+	ch->cbuf[ch->write] = write_sample;
 	ch->write = (ch->write + 1) % max_cbuf_frames;
 
-	return wet;
+	return out;
 }
 
 static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect)
