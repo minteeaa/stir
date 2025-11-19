@@ -27,16 +27,7 @@ refer to the [wiki](https://codeberg.org/mintea/stir/wiki) for setup and usage.
 *versions n' stuff*
 
 the minimum version requirement for OBS Studio is **v30.0.0**.
-
-Arch Linux has been tested. other distros *should* be supported by default. there are no current plans to support macOS.
-
-| OS          | support     |
-|-------------|-------------|
-| windows x64 | supported   |
-| linux       | supported   |
-| macOS       | unsupported |
-
-> Arch Linux has been tested. other distros *should* be supported by default. there are no current plans to support macOS.
+supports Windows (tested via Win10) and Linux (tested via Arch). there are no current plans to support macOS.
 
 ### credits
 *friends who contributed directly and indirectly to this project*
