@@ -1,9 +1,6 @@
-#include "filters/common.h"
 #include <stdio.h>
-#include <stdint.h>
-#include <obs-module.h>
-#include <plugin-support.h>
 
+#include "filters/common.h"
 #include "stir-context.h"
 #include "obs-properties.h"
 #include "util/c99defs.h"
@@ -12,9 +9,9 @@ void migrate_pre_13_config(obs_data_t *settings, const char *old_id, const char 
 {
 	for (size_t ch = 0; ch < 8; ++ch) {
 		char key[24];
-		snprintf(key, sizeof(key), "%s_ch_%zu", old_id, ch % 9u);
+		snprintf(key, sizeof(key), "%s_ch_%zu", old_id, ch % 8u);
 		char nkey[24];
-		snprintf(nkey, sizeof(nkey), "main_%s_ch_%zu", new_id, ch % 9u);
+		snprintf(nkey, sizeof(nkey), "main_%s_ch_%zu", new_id, ch % 8u);
 		bool val = obs_data_get_bool(settings, key);
 		if (obs_data_has_user_value(settings, key)) {
 			obs_data_set_bool(settings, nkey, val);

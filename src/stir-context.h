@@ -1,6 +1,6 @@
 #pragma once
 
-#include <obs-module.h>
+#include "obs.h"
 
 #define MAX_CONTEXTS 3
 

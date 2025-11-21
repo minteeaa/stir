@@ -1,6 +1,5 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
-#include <plugin-support.h>
 #include <string.h>
 
 #include "init.h"
@@ -311,7 +310,7 @@ void rebuild_ch_list(obs_properties_t *props, bool ms)
 		char id[12];
 		snprintf(id, sizeof(id), "ch_src_%zu", k % 8u);
 		char desc[12];
-		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 8u);
+		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 9u);
 		obs_property_t *chs = obs_properties_get(props, id);
 		obs_property_list_clear(chs);
 		obs_property_list_add_string(chs, "Mono Left", "mono_left");
@@ -343,7 +342,7 @@ obs_properties_t *stir_router_properties(void *data)
 		char id[12];
 		snprintf(id, sizeof(id), "ch_src_%zu", k % 8u);
 		char desc[12];
-		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 8u);
+		snprintf(desc, sizeof(desc), "Channel %zu", (k + 1) % 9u);
 		obs_properties_add_list(channel_sources, id, desc, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 	}
 	obs_properties_t *ms = obs_properties_create();

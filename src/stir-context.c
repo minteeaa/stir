@@ -1,8 +1,6 @@
 #include "stir-context.h"
 #include "ext/uthash.h"
 
-#include <plugin-support.h>
-
 struct source_context {
 	obs_source_t *source;
 	context_collection_t *ctx_c;

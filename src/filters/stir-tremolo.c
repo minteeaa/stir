@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
-#include <plugin-support.h>
 
 #include "filters/common.h"
 #include "filters/stir-tremolo.h"

@@ -1,6 +1,5 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
-#include <obs-audio-controls.h>
 #include <plugin-support.h>
 #include <stdio.h>
 

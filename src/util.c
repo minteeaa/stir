@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <obs-module.h>
 
 #include "plugin-support.h"
