@@ -1,6 +1,7 @@
 name: Check Code Formatting
 on:
   workflow_call:
+  workflow_dispatch:
 jobs:
   clang-format:
     runs-on: ubuntu-24.04

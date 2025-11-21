@@ -14,6 +14,7 @@ permissions:
   contents: write
 jobs:
   check-format:
+    runs-on: ubuntu-24.04
     name: Check Formatting
     if: forgejo.ref_name == 'master' || forgejo.ref_name == 'main'
     uses: ./.forgejo/workflows/check-format.yaml
@@ -21,6 +22,7 @@ jobs:
       contents: read
 
   build-project:
+    runs-on: ubuntu-24.04
     name: Build Project
     uses: ./.forgejo/workflows/build-project.yaml
     secrets: inherit
