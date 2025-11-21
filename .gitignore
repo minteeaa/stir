@@ -3,6 +3,8 @@
 
 # Except for default project files
 !/.github
+# (forgejo too)
+!/.forgejo
 !/build-aux
 !/cmake
 !/data

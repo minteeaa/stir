@@ -1,0 +1,27 @@
+name: Pull Request
+run-name: ${{ forgejo.event.pull_request.title }} pull request run
+on:
+  workflow_dispatch:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+    branches: [master, main]
+    types: [ opened, synchronize, reopened ]
+permissions:
+  contents: read
+concurrency:
+  group: '${{ forgejo.workflow }} @ ${{ forgejo.event.pull_request.head.label || forgejo.head_ref || forgejo.ref }}'
+  cancel-in-progress: true
+jobs:
+  check-format:
+    name: Check Formatting
+    uses: ./.forgejo/workflows/check-format.yaml
+    permissions:
+      contents: read
+
+  build-project:
+    name: Build Project
+    uses: ./.forgejo/workflows/build-project.yaml
+    secrets: inherit
+    permissions:
+      contents: read

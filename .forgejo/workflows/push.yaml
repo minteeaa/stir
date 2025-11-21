@@ -1,0 +1,116 @@
+name: Push
+run-name: ${{ forgejo.ref_name }} push run
+on:
+  push:
+    paths-ignore:
+      - "wiki/**"
+    branches:
+      - master
+      - main
+      - 'release/**'
+    tags:
+      - '*'
+permissions:
+  contents: write
+jobs:
+  check-format:
+    name: Check Formatting
+    if: forgejo.ref_name == 'master' || forgejo.ref_name == 'main'
+    uses: ./.forgejo/workflows/check-format.yaml
+    permissions:
+      contents: read
+
+  build-project:
+    name: Build Project
+    uses: ./.forgejo/workflows/build-project.yaml
+    secrets: inherit
+    permissions:
+      contents: read
+
+  create-release:
+    name: Create Release
+    if: forgejo.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    needs: build-project
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check Release Tag
+        id: check
+        run: |
+          : Check Release Tag
+          if [[ "${RUNNER_DEBUG}" ]]; then set -x; fi
+          shopt -s extglob
+
+          case "${GITHUB_REF_NAME}" in
+            +([0-9]).+([0-9]).+([0-9]) )
+              echo 'validTag=true' >> $FORGEJO_OUTPUT
+              echo 'prerelease=false' >> $FORGEJO_OUTPUT
+              echo "version=${GITHUB_REF_NAME}" >> $FORGEJO_OUTPUT
+              ;;
+            +([0-9]).+([0-9]).+([0-9])-@(beta|rc)*([0-9]) )
+              echo 'validTag=true' >> $FORGEJO_OUTPUT
+              echo 'prerelease=true' >> $FORGEJO_OUTPUT
+              echo "version=${GITHUB_REF_NAME}" >> $FORGEJO_OUTPUT
+              ;;
+            *) echo 'validTag=false' >> $FORGEJO_OUTPUT ;;
+          esac
+
+      - name: Download Build Artifacts
+        uses: https://code.forgejo.org/forgejo/download-artifact@v4
+        if: fromJSON(steps.check.outputs.validTag)
+        id: download
+
+      - name: Rename Files
+        if: fromJSON(steps.check.outputs.validTag)
+        run: |
+          : Rename Files
+          if [[ "${RUNNER_DEBUG}" ]]; then set -x; fi
+          shopt -s extglob
+          shopt -s nullglob
+
+          root_dir="$(pwd)"
+          commit_hash="${FORGEJO_SHA:0:9}"
+
+          variants=(
+            'windows-x64;zip|exe'
+            'macos-universal;tar.xz|pkg'
+            'ubuntu-24.04-x86_64;tar.xz|deb|ddeb'
+            'sources;tar.xz'
+          )
+
+          for variant_data in "${variants[@]}"; do
+            IFS=';' read -r variant suffix <<< "${variant_data}"
+
+            candidates=(*-${variant}-${commit_hash}/@(*|*-dbgsym).@(${suffix}))
+
+            for candidate in "${candidates[@]}"; do
+              mv "${candidate}" "${root_dir}"
+            done
+          done
+
+      - name: Generate Checksums
+        if: fromJSON(steps.check.outputs.validTag)
+        run: |
+          : Generate Checksums
+          if [[ "${RUNNER_DEBUG}" ]]; then set -x; fi
+          shopt -s extglob
+
+          echo "### Checksums" > ${{ forgejo.workspace }}/CHECKSUMS.txt
+          mkdir -p artifacts
+          for file in ${{ forgejo.workspace }}/@(*.exe|*.deb|*.ddeb|*.pkg|*.tar.xz|*.zip); do
+            echo "    ${file##*/}: $(sha256sum "${file}" | cut -d " " -f 1)" >> ${{ forgejo.workspace }}/CHECKSUMS.txt
+            mv "${file}" artifacts
+          done
+
+      - name: Create Release
+        if: fromJSON(steps.check.outputs.validTag)
+        id: create_release
+        uses: https://code.forgejo.org/actions/forgejo-release@v2.7.3
+        with:
+          direction: upload
+          prerelease: ${{ fromJSON(steps.check.outputs.prerelease) }}
+          title: v${{ steps.check.outputs.version }}
+          release-notes-assistant: true
+          release-dir: artifacts
