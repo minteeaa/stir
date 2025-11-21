@@ -1,6 +1,7 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "init.h"
 #include "callback/calldata.h"
