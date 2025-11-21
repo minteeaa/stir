@@ -35,8 +35,7 @@ runs:
         echo ::group::Install Linuxbrew (Homebrew)
         NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
         echo ::endgroup::
-
-  steps:
+  
     - name: Install Dependencies
       if: runner.os == 'Linux'
       shell: bash
