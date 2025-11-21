@@ -27,21 +27,18 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install Linuxbrew
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |
-        : Install Linuxbrew
-        echo ::group::Install Linuxbrew (Homebrew)
-        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-        echo ::endgroup::
-  
     - name: Install Dependencies
       if: runner.os == 'Linux'
       shell: bash
       run: |
         : Install Dependencies
         echo ::group::Install Dependencies
+
+        apt-get update
+        apt-get install -y build-essential curl file git
+
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $FORGEJO_PATH
         brew install --quiet zsh
