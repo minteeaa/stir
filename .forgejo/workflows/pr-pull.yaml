@@ -15,12 +15,14 @@ concurrency:
 jobs:
   check-format:
     name: Check Formatting
+    runs-on: ubuntu-24.04
     uses: ./.forgejo/workflows/check-format.yaml
     permissions:
       contents: read
 
   build-project:
     name: Build Project
+    runs-on: ubuntu-24.04
     uses: ./.forgejo/workflows/build-project.yaml
     secrets: inherit
     permissions:

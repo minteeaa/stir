@@ -146,49 +146,56 @@ jobs:
           path: ${{ forgejo.workspace }}/.ccache
           key: ${{ runner.os }}-${{ matrix.os }}-ccache-x86_64-${{ needs.check-event.outputs.config }}
 
-  windows-build:
-    name: Build for Windows
-    runs-on: windows-2022
-    needs: check-event
-    defaults:
-      run:
-        shell: pwsh
-    steps:
-      - uses: https://code.forgejo.org/actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 0
+#  windows-build:
+#    name: Build for Windows
+#    runs-on: windows-2022
+#    needs: check-event
+#    defaults:
+#      run:
+#        shell: pwsh
+#    steps:
+#      - uses: https://code.forgejo.org/actions/checkout@v4
+#        with:
+#          submodules: recursive
+#          fetch-depth: 0
 
-      - name: Set Up Environment
-        id: setup
-        run: |
-          # Set Up Environment
-          if ( $Env:RUNNER_DEBUG -ne $null ) {
-            Set-PSDebug -Trace 1
-          }
+#      - name: Set Up Environment
+#        id: setup
+#        run: |
+#          # Set Up Environment
+#          if ( $Env:RUNNER_DEBUG -ne $null ) {
+#            Set-PSDebug -Trace 1
+#          }
 
-          $BuildSpec = Get-Content -Path buildspec.json -Raw | ConvertFrom-Json
-          $ProductName = $BuildSpec.name
-          $ProductVersion = $BuildSpec.version
+#          $BuildSpec = Get-Content -Path buildspec.json -Raw | ConvertFrom-Json
+#          $ProductName = $BuildSpec.name
+#          $ProductVersion = $BuildSpec.version
 
-          "pluginName=${ProductName}" >> $env:FORGEJO_OUTPUT
-          "pluginVersion=${ProductVersion}" >> $env:FORGEJO_OUTPUT
+#          "pluginName=${ProductName}" >> $env:FORGEJO_OUTPUT
+#          "pluginVersion=${ProductVersion}" >> $env:FORGEJO_OUTPUT
 
-      - name: Build Plugin
-        uses: ./.forgejo/actions/build-plugin
-        with:
-          target: x64
-          config: ${{ needs.check-event.outputs.config }}
+#      - name: Build Plugin
+#        uses: ./.forgejo/actions/build-plugin
+#        with:
+#          target: x64
+#          config: ${{ needs.check-event.outputs.config }}
 
-      - name: Package Plugin
-        uses: ./.forgejo/actions/package-plugin
-        with:
-          target: x64
-          config: ${{ needs.check-event.outputs.config }}
-          package: ${{ fromJSON(needs.check-event.outputs.package) }}
+#      - name: Package Plugin
+#        uses: ./.forgejo/actions/package-plugin
+#        with:
+#          target: x64
+#          config: ${{ needs.check-event.outputs.config }}
+#          package: ${{ fromJSON(needs.check-event.outputs.package) }}
 
-      - name: Upload Artifacts
-        uses: https://code.forgejo.org/forgejo/upload-artifact@v4
-        with:
-          name: ${{ steps.setup.outputs.pluginName }}-${{ steps.setup.outputs.pluginVersion }}-windows-x64-${{ needs.check-event.outputs.commitHash }}
-          path: ${{ forgejo.workspace }}/release/${{ steps.setup.outputs.pluginName }}-${{ steps.setup.outputs.pluginVersion }}-windows-x64*.*
+#      - name: Upload Artifacts
+#        uses: https://code.forgejo.org/forgejo/upload-artifact@v4
+#        with:
+#          name: ${{ steps.setup.outputs.pluginName }}-${{ steps.setup.outputs.pluginVersion }}-windows-x64-${{ needs.check-event.outputs.commitHash }}
+#          path: ${{ forgejo.workspace }}/release/${{ steps.setup.outputs.pluginName }}-${{ steps.setup.outputs.pluginVersion }}-windows-x64*.*
+
+#
+# no current method for building on windows in forgejo
+# till i can get access to a windows server machine
+# to run the builder on
+# - mintea
+#

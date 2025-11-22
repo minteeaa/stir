@@ -61,21 +61,21 @@ runs:
 
         .github/scripts/build-ubuntu ${build_args}
 
-    - name: Run Windows Build
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        # Run Windows Build
-        if ( $Env:RUNNER_DEBUG -ne $null ) {
-          Set-PSDebug -Trace 1
-        }
+#   - name: Run Windows Build
+#     if: runner.os == 'Windows'
+#     shell: pwsh
+#     run: |
+#       # Run Windows Build
+#       if ( $Env:RUNNER_DEBUG -ne $null ) {
+#         Set-PSDebug -Trace 1
+#       }
 
-        $BuildArgs = @{
-          Target = '${{ inputs.target }}'
-          Configuration = '${{ inputs.config }}'
-        }
+#       $BuildArgs = @{
+#         Target = '${{ inputs.target }}'
+#         Configuration = '${{ inputs.config }}'
+#       }
 
-        .github/scripts/Build-Windows.ps1 @BuildArgs
+#       .github/scripts/Build-Windows.ps1 @BuildArgs
 
     - name: Create Summary
       if: contains(fromJSON('["Linux", "macOS"]'),runner.os)
