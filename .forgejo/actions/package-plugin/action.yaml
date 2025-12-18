@@ -53,6 +53,12 @@ runs:
       run: |
         : Install Dependencies
         echo ::group::Install Dependencies
+
+        apt-get update
+        apt-get install -y build-essential curl file git
+
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $FORGEJO_PATH
         brew install --quiet zsh
