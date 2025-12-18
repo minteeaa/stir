@@ -67,10 +67,11 @@ static void update_stir_source(void *private_data)
 		// Emit dummy audio frame to initialize virtual source with correct channel count
 		if (stir_router->virtual_source) {
 			struct obs_source_audio audio_o = {.speakers = stir_router->channels,
-											   .frames = 0,
-											   .format = AUDIO_FORMAT_FLOAT_PLANAR,
-											   .samples_per_sec = audio_output_get_sample_rate(obs_get_audio()),
-											   .timestamp = 0};
+							   .frames = 0,
+							   .format = AUDIO_FORMAT_FLOAT_PLANAR,
+							   .samples_per_sec =
+								   audio_output_get_sample_rate(obs_get_audio()),
+							   .timestamp = 0};
 
 			for (size_t ch = 0; ch < stir_router->channels; ch++)
 				audio_o.data[ch] = NULL;
@@ -251,10 +252,10 @@ struct obs_audio_data *stir_router_process(void *data, struct obs_audio_data *au
 
 	if (sample_ct == 0) {
 		struct obs_source_audio audio_o = {.speakers = channels,
-										   .frames = 0,
-										   .format = AUDIO_FORMAT_FLOAT_PLANAR,
-										   .samples_per_sec = audio_output_get_sample_rate(obs_get_audio()),
-										   .timestamp = audio->timestamp};
+						   .frames = 0,
+						   .format = AUDIO_FORMAT_FLOAT_PLANAR,
+						   .samples_per_sec = audio_output_get_sample_rate(obs_get_audio()),
+						   .timestamp = audio->timestamp};
 
 		for (size_t ch = 0; ch < channels; ch++)
 			audio_o.data[ch] = NULL;
