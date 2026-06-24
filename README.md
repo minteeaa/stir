@@ -1,21 +1,18 @@
-<p align="center">
-  <img src="meta/img/stir-banner-new.png" width="70%"></img>
-</p>
+<div align="center" class="flex">
+  <img height="125" src="https://mintea.pw/img/stir_logo_e.svg"></img>
+  <h3>STIR</h3>
+  <p>multichannel audio filter suite for OBS</p>
 
----
+  <hr>
 
-<p align="center">
   <a title="OBS30+" href="https://obsproject.com/"><img src="https://img.shields.io/badge/OBS-30.0.0+-blue?style=flat-square" alt="OBS 30.0.0+"></a>
   <a title="GPL2" href="https://www.gnu.org/licenses/old-licenses/gpl-2.0"><img src="https://img.shields.io/github/license/minteeaa/stir?style=flat-square" alt="GPL 2.0"></a>
-  <br>
-  <a title="Codeberg" href="https://codeberg.org/mintea/stir"><img src="https://img.shields.io/badge/on-codeberg-blue?style=flat-square&logo=codeberg" alt="Codeberg @ mintea/stir"></a>
-  <a title="Github" href="https://github.com/minteeaa/stir"><img src="https://img.shields.io/badge/on-github-black?style=flat-square&logo=github" alt="Github @ mintea/stir"></a>
-</p>
+</div>
 
 ---
 
 > [!IMPORTANT]
-> this repository's home is on [Codeberg](https://codeberg.org/mintea/stir/), GitHub is a mirror. please open [issues](https://codeberg.org/mintea/stir/issues) and [pull requests](https://codeberg.org/mintea/stir/pulls) on Codeberg.
+> this repository's home is on [Codeberg](https://codeberg.org/mintea/stir/), GitHub is a mirror (and may be archived/deleted in the future). please open [issues](https://codeberg.org/mintea/stir/issues) and [pull requests](https://codeberg.org/mintea/stir/pulls) on Codeberg.
 
 ### what is this
 
