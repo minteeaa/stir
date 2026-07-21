@@ -114,7 +114,7 @@ float echo(float in, struct channel_variables *ch, struct echo_state *state)
 	if (fabsf(state->delay_smoothed - state->delay_target) < 20.0f) {
 		state->delay_current = state->delay_target;
 	}
-	
+
 	size_t delay_samples = (size_t)state->delay_current;
 	size_t read = (ch->write + state->max_cbuf_frames - delay_samples) % state->max_cbuf_frames;
 

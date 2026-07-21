@@ -117,12 +117,15 @@ float vibrato(struct vibrato_state *state, struct channel_variables *ch, float i
 	s_dec = modf((state->depth * vibrato_lfo), &s_int);
 
 	ch->phase += state->rate / state->sample_rate;
-	if (ch->phase >= 1.0f) ch->phase -= 1.0f;
-	
+	if (ch->phase >= 1.0f)
+		ch->phase -= 1.0f;
+
 	size_t read_index = ch->write + s_int;
-		if (read_index >= state->max_cbuf_frames) read_index -= state->max_cbuf_frames;
+	if (read_index >= state->max_cbuf_frames)
+		read_index -= state->max_cbuf_frames;
 	size_t read2_index = read_index + 1;
-		if (read2_index >= state->max_cbuf_frames) read2_index -= state->max_cbuf_frames;
+	if (read2_index >= state->max_cbuf_frames)
+		read2_index -= state->max_cbuf_frames;
 
 	wet = ch->cbuf[read_index] + (s_dec * (ch->cbuf[read2_index] - ch->cbuf[read_index]));
 	out = (in * state->drymix) + (wet * state->wetmix);
