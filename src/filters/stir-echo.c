@@ -27,12 +27,11 @@ struct echo_state {
 	float delay_current, delay_target, delay_smoothed;
 	float decay, wet_mix, dry_mix;
 
+	size_t max_cbuf_frames;
+
 	uint32_t mask;
 	size_t channels;
 };
-
-size_t max_cbuf_frames;
-float smoothing_factor;
 
 const char *stir_echo_get_name(void *data)
 {
@@ -71,7 +70,7 @@ void stir_echo_update(void *data, obs_data_t *settings)
 						state->ch_state[index] = bzalloc(sizeof(struct channel_variables));
 						if (state->ch_state[index]) {
 							state->ch_state[index]->cbuf =
-								bzalloc(max_cbuf_frames * sizeof(float));
+								bzalloc(state->max_cbuf_frames * sizeof(float));
 							state->ch_state[index]->write = 0;
 						}
 					}
@@ -98,7 +97,7 @@ void *stir_echo_create(obs_data_t *settings, obs_source_t *source)
 	state->base.ui_id = "echo";
 	state->delay_current = 1.0f;
 	state->delay_smoothed = 1.0f;
-	max_cbuf_frames =
+	state->max_cbuf_frames =
 		(size_t)((MAX_ECHO_DELAY_MS * (float)audio_output_get_sample_rate(obs_get_audio())) / 1000.0f) + 1;
 	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
@@ -108,13 +107,16 @@ float echo(float in, struct channel_variables *ch, struct echo_state *state)
 {
 	float out = 0.0f;
 	float wet = 0.0f;
-	state->delay_smoothed = interpexp(state->delay_smoothed, state->delay_target, SMOOTHING_COEFFICIENT);
 
+	// TODO: can probably get rid of exponential interp in favor of two-pointer linear interp
+
+	state->delay_smoothed = interpexp(state->delay_smoothed, state->delay_target, SMOOTHING_COEFFICIENT);
 	if (fabsf(state->delay_smoothed - state->delay_target) < 20.0f) {
 		state->delay_current = state->delay_target;
 	}
+	
 	size_t delay_samples = (size_t)state->delay_current;
-	size_t read = (ch->write + max_cbuf_frames - delay_samples) % max_cbuf_frames;
+	size_t read = (ch->write + state->max_cbuf_frames - delay_samples) % state->max_cbuf_frames;
 
 	float sample = ch->cbuf[read];
 	wet = sample * state->decay;
@@ -122,7 +124,7 @@ float echo(float in, struct channel_variables *ch, struct echo_state *state)
 	out = (in * state->dry_mix) + (wet * state->wet_mix);
 
 	ch->cbuf[ch->write] = write_sample;
-	ch->write = (ch->write + 1) % max_cbuf_frames;
+	ch->write = (ch->write + 1) % state->max_cbuf_frames;
 
 	return out;
 }

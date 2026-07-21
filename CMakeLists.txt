@@ -51,6 +51,8 @@ target_sources(
     src/filters/stir-highpass.h
     src/filters/stir-tremolo.c
     src/filters/stir-tremolo.h
+    src/filters/stir-vibrato.c
+    src/filters/stir-vibrato.h
     src/init.c
     src/init.h
     src/chain.c

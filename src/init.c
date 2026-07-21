@@ -1,7 +1,6 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 #include <plugin-support.h>
-#include <stdio.h>
 
 #include "init.h"
 #include "ext/uthash.h"
@@ -10,6 +9,7 @@
 #include "filters/stir-lowpass.h"
 #include "filters/stir-gain.h"
 #include "filters/stir-tremolo.h"
+#include "filters/stir-vibrato.h"
 #include "filters/stir-highpass.h"
 #include "util/base.h"
 #include "util/c99defs.h"
@@ -89,6 +89,8 @@ bool obs_module_load(void)
 	obs_log(LOG_INFO, "Gain: registered filter");
 	obs_register_source(&stir_tremolo_info);
 	obs_log(LOG_INFO, "Tremolo: registered filter");
+	obs_register_source(&stir_vibrato_info);
+	obs_log(LOG_INFO, "Vibrato: registered filter");
 	obs_register_source(&stir_highpass_info);
 	obs_log(LOG_INFO, "Highpass: registered filter");
 	obs_register_source(&stir_echo_info);

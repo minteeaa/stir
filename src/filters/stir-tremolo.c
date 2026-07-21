@@ -91,6 +91,9 @@ void *stir_tremolo_create(obs_data_t *settings, obs_source_t *source)
 float tremolo(struct tremolo_state *state, struct channel_variables *vars, float in)
 {
 	float out = 0.0f;
+
+	// TODO: external method to generate a wave table instead of realtime sine calc would be faster here
+
 	float tremolo_lfo = 1.0f + state->depth * sinf(2.0f * M_PI * vars->phase);
 	float wet = in * tremolo_lfo;
 	out = (in * state->drymix) + (wet * state->wetmix);
