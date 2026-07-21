@@ -22,10 +22,8 @@ struct vibrato_state {
 	struct filter_base base;
 
 	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
-	float rate;
-	float depth;
+	float rate, depth;
 	float wetmix, drymix;
-	float delay_current, delay_target, delay_smoothed;
 
 	float sample_rate;
 	uint32_t mask;
@@ -56,8 +54,6 @@ void stir_vibrato_update(void *data, obs_data_t *settings)
 	state->depth = (float)obs_data_get_double(settings, "vibrato_depth") * 0.01;
 	state->wetmix = (float)obs_data_get_double(settings, "vibrato_wet_mix");
 	state->drymix = (float)obs_data_get_double(settings, "vibrato_dry_mix");
-	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-	state->delay_target = (VIBRATO_READ_DELAY_MS * state->sample_rate) / 1000.0f;
 	context_collection_t *ctx_c = stir_ctx_c_find(state->base.parent);
 
 	if (ctx_c) {
@@ -96,11 +92,10 @@ void *stir_vibrato_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct vibrato_state *state = bzalloc(sizeof(struct vibrato_state));
 	state->base.ui_id = "vib";
-	state->channels = audio_output_get_channels(obs_get_audio());
 	state->base.context = source;
-	state->delay_smoothed = 1.0f;
-	state->max_cbuf_frames =
-		(size_t)((VIBRATO_READ_DELAY_MS * (float)audio_output_get_sample_rate(obs_get_audio())) / 1000.0f) + 1;
+	state->channels = audio_output_get_channels(obs_get_audio());
+	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
+	state->max_cbuf_frames = (size_t)((VIBRATO_READ_DELAY_MS * state->sample_rate) / 1000.0f) + 1;
 	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
 }
