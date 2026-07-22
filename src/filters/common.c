@@ -5,6 +5,9 @@
 #include "obs-properties.h"
 #include "util/c99defs.h"
 
+float sample_rate = 0;
+size_t channels = 0;
+
 void migrate_pre_13_config(obs_data_t *settings, const char *old_id, const char *new_id)
 {
 	for (size_t ch = 0; ch < 8; ++ch) {

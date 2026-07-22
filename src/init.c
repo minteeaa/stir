@@ -61,10 +61,6 @@ void front_ready_cb(enum obs_frontend_event event, void *private_data)
 			entry->cb(entry->userdata);
 		}
 		free_cb_registry();
-
-		obs_log(LOG_INFO, "Setting globals...");
-		sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-		channels = audio_output_get_channels(obs_get_audio());
 	}
 }
 
@@ -102,6 +98,9 @@ bool obs_module_load(void)
 	obs_log(LOG_INFO, "Highpass: registered filter");
 	obs_register_source(&stir_echo_info);
 	obs_log(LOG_INFO, "Echo: registered filter");
+	obs_log(LOG_INFO, "Setting globals...");
+	sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
+	channels = audio_output_get_channels(obs_get_audio());
 	obs_log(LOG_INFO, "STIR modules loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }
