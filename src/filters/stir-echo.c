@@ -21,7 +21,6 @@ struct channel_variables {
 
 struct echo_state {
 	struct filter_base base;
-
 	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
 
 	float delay_current, delay_target, delay_smoothed;
@@ -30,7 +29,6 @@ struct echo_state {
 	size_t max_cbuf_frames;
 
 	uint32_t mask;
-	size_t channels;
 };
 
 const char *stir_echo_get_name(void *data)
@@ -49,7 +47,6 @@ void stir_echo_update(void *data, obs_data_t *settings)
 {
 	struct echo_state *state = data;
 	float user_delay = (float)obs_data_get_double(settings, "echo-delay");
-	float sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 	state->delay_target = (user_delay * sample_rate) / 1000.0f;
 	state->decay = (float)obs_data_get_double(settings, "echo-decay");
 	state->wet_mix = (float)obs_data_get_double(settings, "echo-wet-mix");
@@ -58,10 +55,10 @@ void stir_echo_update(void *data, obs_data_t *settings)
 
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
-			for (size_t ch = 0; ch < state->channels; ++ch) {
+			for (size_t ch = 0; ch < channels; ++ch) {
 				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
 				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
-				size_t index = id * state->channels + ch;
+				size_t index = id * channels + ch;
 				char key[24];
 				snprintf(key, sizeof(key), "%s_echo_ch_%zu", cid, ch % 8u);
 				if (obs_data_get_bool(settings, key)) {
@@ -92,13 +89,11 @@ void *stir_echo_create(obs_data_t *settings, obs_source_t *source)
 {
 	UNUSED_PARAMETER(settings);
 	struct echo_state *state = bzalloc(sizeof(struct echo_state));
-	state->channels = audio_output_get_channels(obs_get_audio());
 	state->base.context = source;
 	state->base.ui_id = "echo";
 	state->delay_current = 1.0f;
 	state->delay_smoothed = 1.0f;
-	state->max_cbuf_frames =
-		(size_t)((MAX_ECHO_DELAY_MS * (float)audio_output_get_sample_rate(obs_get_audio())) / 1000.0f) + 1;
+	state->max_cbuf_frames = (size_t)((MAX_ECHO_DELAY_MS * sample_rate) / 1000.0f) + 1;
 	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
 }
@@ -134,8 +129,8 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 	struct echo_state *state = (struct echo_state *)userdata;
 	float *buf = stir_ctx_get_buf(ctx);
 	uint8_t id = stir_ctx_get_num_id(ctx);
-	for (size_t i = 0; i < state->channels; ++i) {
-		size_t index = id * state->channels + i;
+	for (size_t i = 0; i < channels; ++i) {
+		size_t index = id * channels + i;
 		if ((state->mask & (1 << index)) && (state->ch_state[index])) {
 			for (size_t fr = 0; fr < samplect; ++fr) {
 				buf[i * samplect + fr] = echo(buf[i * samplect + fr], state->ch_state[index], state);

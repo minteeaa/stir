@@ -18,20 +18,17 @@ struct channel_variables {
 
 struct highpass_state {
 	struct filter_base base;
+	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
 
 	float cutoff, q;
 	float wetmix, drymix;
 
-	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
-
-	float sample_rate;
 	uint32_t mask;
-	size_t channels;
 };
 
 void butterworth_calculate_highpass(struct highpass_state *state, struct channel_variables *vars)
 {
-	float omega_c = 2.0f * M_PI * (state->cutoff / state->sample_rate);
+	float omega_c = 2.0f * M_PI * (state->cutoff / sample_rate);
 	float alpha = sinf(omega_c) / (2.0f * state->q);
 
 	float cos_omega_c = cosf(omega_c);
@@ -91,14 +88,13 @@ void stir_highpass_update(void *data, obs_data_t *settings)
 	state->drymix = (float)obs_data_get_double(settings, "hp_dry_mix");
 	state->q = (float)obs_data_get_double(settings, "hp_q");
 	state->cutoff = (float)obs_data_get_double(settings, "hp_cutoff_freq");
-	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 	context_collection_t *ctx_c = stir_ctx_c_find(state->base.parent);
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
-			for (size_t ch = 0; ch < state->channels; ++ch) {
+			for (size_t ch = 0; ch < channels; ++ch) {
 				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
 				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
-				size_t index = id * state->channels + ch;
+				size_t index = id * channels + ch;
 				char key[24];
 				snprintf(key, sizeof(key), "%s_hp_ch_%zu", cid, ch % 8u);
 				if (obs_data_get_bool(settings, key)) {
@@ -126,7 +122,6 @@ void *stir_highpass_create(obs_data_t *settings, obs_source_t *source)
 	UNUSED_PARAMETER(settings);
 	struct highpass_state *state = bzalloc(sizeof(struct highpass_state));
 	state->base.ui_id = "hp";
-	state->channels = audio_output_get_channels(obs_get_audio());
 	state->base.context = source;
 	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
@@ -137,8 +132,8 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 	struct highpass_state *state = (struct highpass_state *)userdata;
 	float *buf = stir_ctx_get_buf(ctx);
 	uint8_t id = stir_ctx_get_num_id(ctx);
-	for (size_t i = 0; i < state->channels; ++i) {
-		size_t index = id * state->channels + i;
+	for (size_t i = 0; i < channels; ++i) {
+		size_t index = id * channels + i;
 		if (state->mask & (1 << index)) {
 			struct channel_variables *channel_vars = state->ch_state[index];
 			for (size_t fr = 0; fr < samplect; ++fr) {

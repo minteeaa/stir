@@ -11,7 +11,6 @@ struct gain_state {
 
 	float gain;
 	uint32_t mask;
-	size_t channels;
 };
 
 const char *stir_gain_get_name(void *data)
@@ -34,15 +33,15 @@ void stir_gain_update(void *data, obs_data_t *settings)
 
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
-			for (size_t ch = 0; ch < state->channels; ++ch) {
+			for (size_t ch = 0; ch < channels; ++ch) {
 				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
 				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
 				char key[24];
 				snprintf(key, sizeof(key), "%s_gain_ch_%zu", cid, ch % 8u);
 				if (obs_data_get_bool(settings, key)) {
-					state->mask |= (1 << (id * state->channels + ch));
+					state->mask |= (1 << (id * channels + ch));
 				} else {
-					state->mask &= ~(1 << (id * state->channels + ch));
+					state->mask &= ~(1 << (id * channels + ch));
 				}
 			}
 		}
@@ -53,7 +52,6 @@ void *stir_gain_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct gain_state *state = bzalloc(sizeof(struct gain_state));
 	state->base.ui_id = "gain";
-	state->channels = audio_output_get_channels(obs_get_audio());
 	state->base.context = source;
 	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
@@ -64,8 +62,8 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 	struct gain_state *state = (struct gain_state *)userdata;
 	float *buf = stir_ctx_get_buf(ctx);
 	uint8_t id = stir_ctx_get_num_id(ctx);
-	for (size_t i = 0; i < state->channels; ++i) {
-		if (state->mask & (1 << (id * state->channels + i))) {
+	for (size_t i = 0; i < channels; ++i) {
+		if (state->mask & (1 << (id * channels + i))) {
 			for (size_t fr = 0; fr < samplect; ++fr) {
 				buf[i * samplect + fr] *= state->gain;
 			}

@@ -12,22 +12,20 @@
 
 #define VIBRATO_READ_DELAY_MS 5.0f
 
-struct channel_variables {
-	float phase;
+struct channel_state {
 	float *cbuf;
+	float phase;
 	int write;
 };
 
 struct vibrato_state {
 	struct filter_base base;
+	struct channel_state *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
 
-	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
 	float rate, depth;
 	float wetmix, drymix;
 
-	float sample_rate;
 	uint32_t mask;
-	size_t channels;
 	size_t max_cbuf_frames;
 };
 
@@ -58,16 +56,16 @@ void stir_vibrato_update(void *data, obs_data_t *settings)
 
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
-			for (size_t ch = 0; ch < state->channels; ++ch) {
+			for (size_t ch = 0; ch < channels; ++ch) {
 				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
 				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
-				size_t index = id * state->channels + ch;
+				size_t index = id * channels + ch;
 				char key[24];
 				snprintf(key, sizeof(key), "%s_vib_ch_%zu", cid, ch % 8u);
 				if (obs_data_get_bool(settings, key)) {
 					state->mask |= (1 << index);
 					if (!state->ch_state[index]) {
-						state->ch_state[index] = bzalloc(sizeof(struct channel_variables));
+						state->ch_state[index] = bzalloc(sizeof(struct channel_state));
 						if (state->ch_state[index]) {
 							state->ch_state[index]->cbuf =
 								bzalloc(state->max_cbuf_frames * sizeof(float));
@@ -93,14 +91,12 @@ void *stir_vibrato_create(obs_data_t *settings, obs_source_t *source)
 	struct vibrato_state *state = bzalloc(sizeof(struct vibrato_state));
 	state->base.ui_id = "vib";
 	state->base.context = source;
-	state->channels = audio_output_get_channels(obs_get_audio());
-	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
-	state->max_cbuf_frames = (size_t)((VIBRATO_READ_DELAY_MS * state->sample_rate) / 1000.0f) + 1;
+	state->max_cbuf_frames = (size_t)((VIBRATO_READ_DELAY_MS * sample_rate) / 1000.0f) + 1;
 	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
 }
 
-float vibrato(struct vibrato_state *state, struct channel_variables *ch, float in)
+float vibrato(struct vibrato_state *state, struct channel_state *ch, float in)
 {
 	float out, wet = 0.0f;
 	double s_dec, s_int = 0.0;
@@ -111,7 +107,7 @@ float vibrato(struct vibrato_state *state, struct channel_variables *ch, float i
 	float vibrato_lfo = (sinf(2.0f * M_PI * ch->phase) + 1.0f) * (state->max_cbuf_frames - 1) * 0.5f;
 	s_dec = modf((state->depth * vibrato_lfo), &s_int);
 
-	ch->phase += state->rate / state->sample_rate;
+	ch->phase += state->rate / sample_rate;
 	if (ch->phase >= 1.0f)
 		ch->phase -= 1.0f;
 
@@ -136,10 +132,10 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 	struct vibrato_state *state = (struct vibrato_state *)userdata;
 	float *buf = stir_ctx_get_buf(ctx);
 	uint8_t id = stir_ctx_get_num_id(ctx);
-	for (size_t i = 0; i < state->channels; ++i) {
-		size_t index = id * state->channels + i;
+	for (size_t i = 0; i < channels; ++i) {
+		size_t index = id * channels + i;
 		if (state->mask & (1 << index)) {
-			struct channel_variables *channel_vars = state->ch_state[index];
+			struct channel_state *channel_vars = state->ch_state[index];
 			for (size_t fr = 0; fr < samplect; ++fr) {
 				buf[i * samplect + fr] = vibrato(state, channel_vars, buf[i * samplect + fr]);
 			}

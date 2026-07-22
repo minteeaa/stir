@@ -16,15 +16,12 @@ struct channel_variables {
 
 struct tremolo_state {
 	struct filter_base base;
-
 	struct channel_variables *ch_state[MAX_CONTEXTS * MAX_AUDIO_CHANNELS];
-	float rate;
-	float depth;
+
+	float rate, depth;
 	float wetmix, drymix;
 
-	float sample_rate;
 	uint32_t mask;
-	size_t channels;
 };
 
 const char *stir_tremolo_get_name(void *data)
@@ -50,15 +47,14 @@ void stir_tremolo_update(void *data, obs_data_t *settings)
 	state->depth = (float)obs_data_get_double(settings, "tremolo_depth") * 0.01f;
 	state->wetmix = (float)obs_data_get_double(settings, "tremolo_wet_mix");
 	state->drymix = (float)obs_data_get_double(settings, "tremolo_dry_mix");
-	state->sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
 	context_collection_t *ctx_c = stir_ctx_c_find(state->base.parent);
 
 	if (ctx_c) {
 		for (size_t c = 0; c < ctx_c->length; ++c) {
-			for (size_t ch = 0; ch < state->channels; ++ch) {
+			for (size_t ch = 0; ch < channels; ++ch) {
 				uint8_t id = stir_ctx_get_num_id(ctx_c->ctx[c]);
 				const char *cid = stir_ctx_get_id(ctx_c->ctx[c]);
-				size_t index = id * state->channels + ch;
+				size_t index = id * channels + ch;
 				char key[24];
 				snprintf(key, sizeof(key), "%s_lfo_ch_%zu", cid, ch % 8u);
 				if (obs_data_get_bool(settings, key)) {
@@ -82,7 +78,6 @@ void *stir_tremolo_create(obs_data_t *settings, obs_source_t *source)
 {
 	struct tremolo_state *state = bzalloc(sizeof(struct tremolo_state));
 	state->base.ui_id = "lfo";
-	state->channels = audio_output_get_channels(obs_get_audio());
 	state->base.context = source;
 	migrate_pre_13_config(settings, state->base.ui_id, state->base.ui_id);
 	return state;
@@ -98,7 +93,7 @@ float tremolo(struct tremolo_state *state, struct channel_variables *vars, float
 	float wet = in * tremolo_lfo;
 	out = (in * state->drymix) + (wet * state->wetmix);
 
-	vars->phase += state->rate / state->sample_rate;
+	vars->phase += state->rate / sample_rate;
 	if (vars->phase >= 1.0f)
 		vars->phase -= 1.0f;
 	return out;
@@ -109,8 +104,8 @@ static void process_audio(stir_context_t *ctx, void *userdata, uint32_t samplect
 	struct tremolo_state *state = (struct tremolo_state *)userdata;
 	float *buf = stir_ctx_get_buf(ctx);
 	uint8_t id = stir_ctx_get_num_id(ctx);
-	for (size_t i = 0; i < state->channels; ++i) {
-		size_t index = id * state->channels + i;
+	for (size_t i = 0; i < channels; ++i) {
+		size_t index = id * channels + i;
 		if (state->mask & (1 << index)) {
 			struct channel_variables *channel_vars = state->ch_state[index];
 			for (size_t fr = 0; fr < samplect; ++fr) {

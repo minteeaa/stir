@@ -1,9 +1,12 @@
+#include <media-io/audio-io.h>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
+#include <obs.h>
 #include <plugin-support.h>
 
 #include "init.h"
 #include "ext/uthash.h"
+#include "filters/common.h"
 #include "filters/stir-echo.h"
 #include "filters/stir-router.h"
 #include "filters/stir-lowpass.h"
@@ -52,12 +55,16 @@ void front_ready_cb(enum obs_frontend_event event, void *private_data)
 	UNUSED_PARAMETER(private_data);
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
 		front_init = 1;
-		obs_log(LOG_INFO, "OBS frontend finished loading. Invoking init callbacks.");
+		obs_log(LOG_INFO, "OBS frontend finished loading. Invoking init callbacks...");
 		struct init_cb_c *entry, *tmp;
 		HASH_ITER (hh, init_chain, entry, tmp) {
 			entry->cb(entry->userdata);
 		}
 		free_cb_registry();
+
+		obs_log(LOG_INFO, "Setting globals...");
+		sample_rate = (float)audio_output_get_sample_rate(obs_get_audio());
+		channels = audio_output_get_channels(obs_get_audio());
 	}
 }
 
