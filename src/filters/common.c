@@ -102,3 +102,17 @@ void filter_make_ctx_dropdown(obs_properties_t *props, struct filter_base *data)
 	}
 	obs_property_set_modified_callback2(fil, update_ch_list_vis, data);
 }
+
+void filter_build_config(void (*filter_update)(void *, obs_data_t *), void *data, obs_source_t *context)
+{
+	obs_data_t *settings = obs_source_get_settings(context);
+	obs_data_t *defaults = obs_data_get_defaults(settings);
+	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
+	obs_data_t *config = obs_data_create_from_json(obs_data_get_json(defaults));
+	obs_data_apply(config, settings_safe);
+	filter_update(data, config);
+	obs_data_release(settings_safe);
+	obs_data_release(settings);
+	obs_data_release(defaults);
+	obs_data_release(config);
+}

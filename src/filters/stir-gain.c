@@ -75,16 +75,7 @@ void stir_gain_add(void *data, obs_source_t *source)
 {
 	struct gain_state *state = data;
 	state->base.parent = source;
-	obs_data_t *settings = obs_source_get_settings(state->base.context);
-	obs_data_t *defaults = obs_data_get_defaults(settings);
-	obs_data_t *settings_safe = obs_data_create_from_json(obs_data_get_json(settings));
-	obs_data_t *config = obs_data_create_from_json(obs_data_get_json(defaults));
-	obs_data_apply(config, settings_safe);
-	stir_gain_update(state, config);
-	obs_data_release(settings_safe);
-	obs_data_release(settings);
-	obs_data_release(defaults);
-	obs_data_release(config);
+	filter_build_config(stir_gain_update, state, state->base.context);
 	stir_register_filter(source, "gain", state->base.context, process_audio, state);
 }
 
